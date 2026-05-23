@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="walden-shelf">
+<meta name="theme-color" id="themeColor" content="#ffffff">
+<title>walden-shelf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f6f6f4;--bg3:#efefec;--bg4:#e8e8e4;
+  --ln:#e4e4e0;--ln2:#d0d0ca;--ln3:#b8b8b0;
+  --tx:#111110;--tx2:#606058;--tx3:#a0a098;
+  --radius:10px;--radius-sm:6px;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --f:  'Noto Sans TC',sans-serif;
+  --fm: 'DM Mono',monospace;
+  --sheet-bg:var(--bg);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111110;--bg2:#1a1a18;--bg3:#222220;--bg4:#2c2c28;
+  --ln:#252522;--ln2:#343430;--ln3:#484840;
+  --tx:#e8e8e2;--tx2:#909088;--tx3:#585852;
+  --sheet-bg:#1a1a18;
+}}
+
+/* Tag palette — 8 named colours, light+dark each */
+.tc0{--tc-bg:rgba(219,182,119,.18);--tc-bdr:rgba(219,182,119,.45);--tc-txt:#7a5c14}
+.tc1{--tc-bg:rgba(122,168,130,.18);--tc-bdr:rgba(122,168,130,.45);--tc-txt:#2d6e3a}
+.tc2{--tc-bg:rgba(113,148,196,.18);--tc-bdr:rgba(113,148,196,.45);--tc-txt:#1e4e84}
+.tc3{--tc-bg:rgba(185,120,155,.18);--tc-bdr:rgba(185,120,155,.45);--tc-txt:#722454}
+.tc4{--tc-bg:rgba(180,120,90,.18);--tc-bdr:rgba(180,120,90,.45);--tc-txt:#6b2e10}
+.tc5{--tc-bg:rgba(120,165,180,.18);--tc-bdr:rgba(120,165,180,.45);--tc-txt:#1a5464}
+.tc6{--tc-bg:rgba(160,148,108,.18);--tc-bdr:rgba(160,148,108,.45);--tc-txt:#5a4a10}
+.tc7{--tc-bg:rgba(150,120,185,.18);--tc-bdr:rgba(150,120,185,.45);--tc-txt:#522878}
+@media(prefers-color-scheme:dark){
+.tc0{--tc-txt:#e0c070}.tc1{--tc-txt:#74c882}.tc2{--tc-txt:#78aaee}
+.tc3{--tc-txt:#d888b8}.tc4{--tc-txt:#d49070}.tc5{--tc-txt:#72c0d4}
+.tc6{--tc-txt:#c8b870}.tc7{--tc-txt:#b890e0}
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);overscroll-behavior:none;-webkit-text-size-adjust:100%;font-size:16px}
+
+/* ── Layout ── */
+#app{display:flex;flex-direction:column;height:100dvh;max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+header{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--ln);padding:calc(var(--safe-t) + 12px) 16px 0}
+.hdr{display:flex;align-items:center;gap:8px;padding-bottom:12px}
+h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
+.hdr-menu-btn{font-size:22px;font-family:var(--fm);color:var(--tx3);background:none;border:none;cursor:pointer;padding:4px 6px;line-height:1;border-radius:var(--radius-sm)}
+.hdr-menu-btn:active{background:var(--bg3)}
+
+/* search */
+.search-row{padding-bottom:10px}
+.search-wrap{position:relative}
+.search-input{
+  width:100%;background:var(--bg2);border:1px solid var(--ln);border-radius:var(--radius);
+  padding:10px 12px 10px 14px;font-size:15px;font-family:var(--f);color:var(--tx);
+  outline:none;min-height:42px;
+}
+.search-input::placeholder{color:var(--tx3)}
+.search-input:focus{border-color:var(--ln3)}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;font-family:var(--fm);padding:4px;line-height:1;display:none}
+
+/* filter bar */
+.filter-bar{display:flex;gap:5px;overflow-x:auto;padding-bottom:11px;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.fchip{
+  flex-shrink:0;padding:5px 12px;border-radius:999px;
+  border:1px solid var(--ln2);font-size:13px;font-family:var(--f);
+  color:var(--tx2);background:transparent;cursor:pointer;white-space:nowrap;min-height:32px;
+  transition:all .12s;
+}
+.fchip.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.fchip.tag-chip{background:var(--tc-bg);border-color:var(--tc-bdr);color:var(--tc-txt)}
+.fchip.tag-chip.on{background:var(--tc-txt);color:var(--bg);border-color:var(--tc-txt)}
+.sep{width:1px;background:var(--ln2);flex-shrink:0;margin:4px 0}
+
+/* ── Stats strip ── */
+.stats-strip{display:flex;flex-shrink:0;border-bottom:1px solid var(--ln);background:var(--bg2)}
+.ss{flex:1;text-align:center;padding:8px 4px;border-right:1px solid var(--ln)}
+.ss:last-child{border-right:none}
+.ss-n{font-size:16px;font-family:var(--fm);font-weight:400;color:var(--tx);line-height:1}
+.ss-l{font-size:10px;color:var(--tx3);letter-spacing:.04em;margin-top:2px}
+
+/* ── List ── */
+.list-wrap{flex:1;overflow-y:auto;padding:10px 14px;padding-bottom:calc(70px + var(--safe-b))}
+.list-wrap::-webkit-scrollbar{width:3px}
+.list-wrap::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
+
+/* Card */
+.card{
+  background:var(--bg);border:1px solid var(--ln);border-radius:var(--radius);
+  padding:13px 13px 11px;margin-bottom:8px;cursor:pointer;
+}
+.card:active{background:var(--bg2)}
+.card.s-doing{border-left:3px solid var(--ln3);padding-left:11px}
+.card.s-done {border-left:3px solid var(--tx);padding-left:11px}
+
+.card-top{display:flex;gap:10px;align-items:flex-start}
+.card-main{flex:1;min-width:0}
+.card-title{font-size:15px;font-weight:500;color:var(--tx);line-height:1.4;word-break:break-word}
+.card-sub{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;align-items:center}
+
+/* base tag style */
+.ctag{
+  font-size:11px;font-family:var(--fm);padding:2px 7px;border-radius:4px;
+  border:1px solid var(--ln);color:var(--tx2);background:var(--bg2);letter-spacing:.02em;
+}
+.ctag.status-done{border-color:var(--tx);color:var(--tx)}
+.ctag.status-doing{border-color:var(--ln3);color:var(--tx2)}
+/* coloured tag */
+.ctag.col{background:var(--tc-bg);border-color:var(--tc-bdr);color:var(--tc-txt)}
+
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0}
+.cycle-btn{
+  font-size:11px;font-family:var(--fm);color:var(--tx3);
+  border:1px solid var(--ln);border-radius:var(--radius-sm);
+  background:transparent;padding:5px 9px;cursor:pointer;white-space:nowrap;min-height:30px;
+}
+.cycle-btn:active{background:var(--bg3)}
+.del-btn{font-size:12px;font-family:var(--fm);color:var(--tx3);cursor:pointer;padding:4px 6px;min-height:28px;display:flex;align-items:center;border-radius:var(--radius-sm)}
+.del-btn:active{background:var(--bg3);color:var(--tx)}
+
+.card-note{font-size:13px;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--ln);line-height:1.6}
+
+/* review */
+.card-review{margin-top:8px;padding-top:8px;border-top:1px solid var(--ln)}
+.score-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.score-num{font-size:19px;font-family:var(--fm);font-weight:300;color:var(--tx);line-height:1}
+.score-of{font-size:11px;font-family:var(--fm);color:var(--tx3)}
+.score-bar{display:flex;gap:3px}
+.sp{height:3px;flex:1;background:var(--ln);border-radius:2px}
+.sp.on{background:var(--tx)}
+.review-body{font-size:13px;color:var(--tx2);line-height:1.7;margin-top:5px}
+
+.empty{text-align:center;padding:72px 20px;color:var(--tx3);font-size:14px;line-height:2;letter-spacing:.03em}
+
+/* ── FAB ── */
+.fab{
+  position:fixed;bottom:calc(22px + var(--safe-b));right:50%;
+  transform:translateX(calc(50% + 290px));
+  width:52px;height:52px;border-radius:50%;
+  background:var(--tx);color:var(--bg);font-size:26px;font-weight:300;
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;
+}
+.fab:active{opacity:.75}
+@media(max-width:640px){.fab{right:18px;transform:none}}
+
+/* ── Overlay ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(1px)}
+.overlay.open{opacity:1;pointer-events:all}
+
+/* ── Sheet ── */
+.sheet{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(105%);
+  width:100%;max-width:640px;
+  background:var(--sheet-bg);border-radius:14px 14px 0 0;border-top:1px solid var(--ln2);
+  padding:0 16px calc(20px + var(--safe-b));
+  z-index:30;transition:transform .26s cubic-bezier(.32,.72,0,1);
+  max-height:94dvh;overflow-y:auto;
+}
+.sheet.open{transform:translateX(-50%) translateY(0)}
+.sh-handle{width:36px;height:4px;background:var(--ln2);border-radius:2px;margin:12px auto 16px}
+.sh-title{font-size:15px;font-weight:500;color:var(--tx);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--ln)}
+
+/* form fields */
+.field{margin-bottom:14px}
+.field label{font-size:11px;font-family:var(--fm);color:var(--tx3);letter-spacing:.07em;display:block;margin-bottom:6px}
+.finput,.ftextarea,.fselect{
+  width:100%;background:var(--bg2);border:1px solid var(--ln);border-radius:var(--radius);
+  padding:11px 13px;font-size:15px;font-family:var(--f);color:var(--tx);outline:none;
+  -webkit-appearance:none;appearance:none;min-height:44px;
+}
+.finput:focus,.ftextarea:focus,.fselect:focus{border-color:var(--ln3)}
+.ftextarea{resize:none;height:72px;line-height:1.6}
+.fselect{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23a0a098' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.fselect option{background:var(--bg)}
+.row2{display:flex;gap:10px}.row2 .field{flex:1}
+
+/* tag selector */
+.tag-selector{display:flex;gap:6px;flex-wrap:wrap;padding:2px 0}
+.ts-tag{
+  padding:5px 11px;border-radius:999px;font-size:12px;font-family:var(--f);
+  border:1px solid var(--tc-bdr);background:var(--tc-bg);color:var(--tc-txt);
+  cursor:pointer;transition:all .12s;min-height:30px;display:flex;align-items:center;
+}
+.ts-tag.sel{outline:2px solid var(--tc-txt);outline-offset:1px}
+.ts-add{
+  padding:5px 11px;border-radius:999px;font-size:12px;font-family:var(--fm);
+  border:1px dashed var(--ln2);color:var(--tx3);background:transparent;
+  cursor:pointer;min-height:30px;display:flex;align-items:center;
+}
+.ts-add:active{background:var(--bg3)}
+
+/* score picker */
+.score-picker{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.sc-btn{
+  width:38px;height:38px;border-radius:var(--radius-sm);border:1px solid var(--ln);
+  background:var(--bg2);font-size:13px;font-family:var(--fm);color:var(--tx2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.sc-btn.sel,.sc-none.sel{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.sc-none{
+  height:38px;padding:0 12px;border-radius:var(--radius-sm);border:1px solid var(--ln);
+  background:var(--bg2);font-size:12px;font-family:var(--fm);color:var(--tx3);
+  cursor:pointer;display:flex;align-items:center;
+}
+
+/* done section */
+.done-box{background:var(--bg2);border:1px solid var(--ln);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.done-box-label{font-size:11px;font-family:var(--fm);color:var(--tx3);letter-spacing:.07em;margin-bottom:12px}
+
+/* sheet buttons */
+.sh-btns{display:flex;gap:8px;margin-top:6px}
+.btn-cancel{flex:1;padding:13px;border-radius:var(--radius);border:1px solid var(--ln);background:transparent;color:var(--tx2);font-size:14px;font-family:var(--f);cursor:pointer;min-height:48px}
+.btn-cancel:active{background:var(--bg3)}
+.btn-ok{flex:2;padding:13px;border-radius:var(--radius);border:none;background:var(--tx);color:var(--bg);font-size:14px;font-family:var(--f);font-weight:500;cursor:pointer;min-height:48px;letter-spacing:.02em}
+.btn-ok:active{opacity:.8}
+.btn-full{width:100%;padding:13px;border-radius:var(--radius);border:1px solid var(--ln);background:transparent;color:var(--tx2);font-size:14px;font-family:var(--f);cursor:pointer;min-height:48px;margin-top:8px}
+.btn-full:active{background:var(--bg3)}
+
+/* menu sheet items */
+.menu-list{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.menu-item{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px solid var(--ln);cursor:pointer;font-size:15px;color:var(--tx)}
+.menu-item:last-child{border-bottom:none}
+.menu-item:active{color:var(--tx2)}
+.menu-arrow{font-family:var(--fm);color:var(--tx3);font-size:13px}
+
+/* danger */
+.btn-danger{color:#c0392b !important;border-color:rgba(192,57,43,.3) !important}
+@media(prefers-color-scheme:dark){.btn-danger{color:#e07060 !important;border-color:rgba(224,112,96,.3) !important}}
+
+/* io sheet */
+.io-cards{display:flex;gap:8px;margin-bottom:14px}
+.io-card{flex:1;padding:16px 10px;border-radius:var(--radius);border:1px solid var(--ln);background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:76px}
+.io-card:active{background:var(--bg3)}
+.io-card-title{font-size:14px;color:var(--tx);font-weight:500}
+.io-card-note{font-size:11px;font-family:var(--fm);color:var(--tx3);letter-spacing:.03em}
+
+/* manage tags sheet */
+.tag-manage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.tm-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--ln)}
+.tm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tm-name{flex:1;font-size:14px;color:var(--tx)}
+.tm-del{font-family:var(--fm);font-size:12px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:4px}
+.tm-del:active{background:var(--bg4)}
+.add-tag-row{display:flex;gap:8px;align-items:flex-end}
+.add-tag-row .finput{flex:1;margin-bottom:0}
+.color-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;margin-bottom:14px}
+.cp{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.cp.sel{outline:2px solid var(--tx);outline-offset:2px}
+
+/* manage types */
+.type-manage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.type-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--ln)}
+.type-name{flex:1;font-size:14px;color:var(--tx)}
+.type-del{font-family:var(--fm);font-size:12px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:4px}
+.type-del:active{background:var(--bg4)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hdr">
+      <h1>walden-shelf</h1>
+      <button class="hdr-menu-btn" id="menuBtn" aria-label="選單">···</button>
+    </div>
+    <div class="search-row">
+      <div class="search-wrap">
+        <input type="search" id="searchInput" class="search-input" placeholder="搜尋標題、備註、短評、標籤">
+        <button class="search-clear" id="searchClear">x</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="filterBar"></div>
+  </header>
+
+  <div class="stats-strip" id="statsStrip"></div>
+  <div class="list-wrap" id="listWrap"></div>
+</div>
+
+<button class="fab" id="fab" aria-label="新增">+</button>
+<div class="overlay" id="overlay"></div>
+
+<!-- Add/Edit sheet -->
+<div class="sheet" id="addSheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title" id="sheetTitle">新增</div>
+  <div class="field"><label>標題</label><input id="fTitle" type="text" class="finput" placeholder="書名或片名" autocomplete="off"></div>
+  <div class="row2">
+    <div class="field"><label>類型</label><select id="fType" class="fselect"></select></div>
+    <div class="field"><label>狀態</label>
+      <select id="fStatus" class="fselect" onchange="onStatusChange()">
+        <option value="want">想看</option><option value="doing">進行中</option><option value="done">已完成</option>
+      </select>
+    </div>
+  </div>
+  <div class="field"><label>標籤（可多選）</label><div class="tag-selector" id="tagSelector"></div></div>
+  <div class="field"><label>備註（選填）</label><textarea id="fNote" class="ftextarea" placeholder="朋友推薦、第3集看到一半…"></textarea></div>
+  <div id="doneBox" style="display:none">
+    <div class="done-box">
+      <div class="done-box-label">已完成</div>
+      <div class="field" style="margin-bottom:12px"><label>評分</label><div class="score-picker" id="scorePicker"></div></div>
+      <div class="field" style="margin-bottom:0"><label>短評</label><textarea id="fReview" class="ftextarea" placeholder="幾句話留下印象…" style="height:80px"></textarea></div>
+    </div>
+  </div>
+  <div class="sh-btns">
+    <button class="btn-cancel" id="cancelAdd">取消</button>
+    <button class="btn-ok" id="confirmAdd">儲存</button>
+  </div>
+</div>
+
+<!-- Menu sheet -->
+<div class="sheet" id="menuSheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">選單</div>
+  <div class="menu-list">
+    <div class="menu-item" onclick="openFromMenu('ioSheet')">匯入 / 匯出<span class="menu-arrow">›</span></div>
+    <div class="menu-item" onclick="openFromMenu('tagMgSheet');renderTagMg()">管理標籤<span class="menu-arrow">›</span></div>
+    <div class="menu-item" onclick="openFromMenu('typeMgSheet');renderTypeMg()">管理分類<span class="menu-arrow">›</span></div>
+  </div>
+  <button class="btn-full" id="cancelMenu">關閉</button>
+</div>
+
+<!-- IO sheet -->
+<div class="sheet" id="ioSheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">匯入 / 匯出</div>
+  <div class="io-cards">
+    <div class="io-card" id="exportBtn"><span class="io-card-title">匯出 JSON</span><span class="io-card-note">備份全部資料</span></div>
+    <div class="io-card" id="importTrigger"><span class="io-card-title">匯入 JSON</span><span class="io-card-note">還原或合併資料</span></div>
+  </div>
+  <div class="field"><label>匯入模式</label>
+    <select id="importMode" class="fselect">
+      <option value="merge">合併（保留現有，補入不重複項目）</option>
+      <option value="replace">取代（清除現有，換成匯入資料）</option>
+    </select>
+  </div>
+  <input type="file" id="fileInput" accept=".json" style="display:none">
+  <button class="btn-full" id="cancelIo">關閉</button>
+</div>
+
+<!-- Tag manage sheet -->
+<div class="sheet" id="tagMgSheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">管理標籤</div>
+  <div class="tag-manage-list" id="tagMgList"></div>
+  <div class="field"><label>新增標籤</label>
+    <div class="add-tag-row">
+      <input id="newTagName" type="text" class="finput" placeholder="標籤名稱" autocomplete="off" style="min-height:44px">
+      <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addTag()">新增</button>
+    </div>
+    <div class="color-picks" id="colorPicks"></div>
+  </div>
+  <button class="btn-full" id="cancelTagMg">關閉</button>
+</div>
+
+<!-- Type manage sheet -->
+<div class="sheet" id="typeMgSheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">管理分類</div>
+  <div class="type-manage-list" id="typeMgList"></div>
+  <div class="field"><label>新增分類</label>
+    <div class="add-tag-row">
+      <input id="newTypeName" type="text" class="finput" placeholder="分類名稱" autocomplete="off" style="min-height:44px">
+      <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addType()">新增</button>
+    </div>
+  </div>
+  <button class="btn-full" id="cancelTypeMg">關閉</button>
+</div>
+
+<script>
+/* ───── Constants ───── */
+const SL={want:'想看',doing:'進行中',done:'已完成'};
+const SN={want:'doing',doing:'done',done:'want'};
+const TC_COLORS=[
+  {cls:'tc0',bg:'#dbb677',label:'金'},
+  {cls:'tc1',bg:'#7aa882',label:'綠'},
+  {cls:'tc2',bg:'#7194c4',label:'藍'},
+  {cls:'tc3',bg:'#b9789b',label:'紫紅'},
+  {cls:'tc4',bg:'#b4785a',label:'棕'},
+  {cls:'tc5',bg:'#78a5b4',label:'青'},
+  {cls:'tc6',bg:'#a0946c',label:'橄欖'},
+  {cls:'tc7',bg:'#9678b9',label:'紫'},
+];
+const DEFAULT_TYPES=['書','電影','影集','其他'];
+
+/* ───── State ───── */
+function loadDB(){
+  try{return JSON.parse(localStorage.getItem('ml5')||'null')}catch{return null}
+}
+function initDB(){
+  return{items:[],tags:[
+    {id:'t1',name:'必看',color:'tc0'},{id:'t2',name:'朋友推薦',color:'tc2'},
+    {id:'t3',name:'重看',color:'tc6'},{id:'t4',name:'看到一半',color:'tc4'},
+  ],types:[...DEFAULT_TYPES]};
+}
+let db=loadDB()||initDB();
+if(!db.types) db.types=[...DEFAULT_TYPES];
+if(!db.tags) db.tags=[];
+const save=()=>localStorage.setItem('ml5',JSON.stringify(db));
+
+let fType='all',fStatus='all',fTag='',sq='',editId=null,selScore=null,selTagIds=[],selNewTagColor='tc0';
+
+/* ───── Helpers ───── */
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function tagById(id){return db.tags.find(t=>t.id===id)}
+function ts(){
+  const d=new Date();
+  const date=d.toLocaleDateString('zh-TW').replace(/\//g,'-');
+  const h=String(d.getHours()).padStart(2,'0');
+  const m=String(d.getMinutes()).padStart(2,'0');
+  return`${date}_${h}${m}`;
+}
+
+/* ───── Score ───── */
+function buildScore(cur){
+  selScore=cur??null;
+  const el=document.getElementById('scorePicker');
+  let h=`<button class="sc-none${selScore===null?' sel':''}" onclick="setScore(null)">無</button>`;
+  for(let i=1;i<=10;i++) h+=`<button class="sc-btn${selScore===i?' sel':''}" onclick="setScore(${i})">${i}</button>`;
+  el.innerHTML=h;
+}
+window.setScore=v=>{selScore=v;buildScore(v)};
+
+function scoreBars(n){
+  if(n==null)return'';
+  let h='<div class="score-bar">';
+  for(let i=1;i<=10;i++) h+=`<div class="sp${i<=n?' on':''}"></div>`;
+  return h+'</div>';
+}
+
+/* ───── Tag selector in form ───── */
+function buildTagSelector(){
+  const el=document.getElementById('tagSelector');
+  if(!db.tags.length){el.innerHTML=`<span style="font-size:13px;color:var(--tx3);font-family:var(--fm)">尚無標籤，可至選單新增</span>`;return}
+  el.innerHTML=db.tags.map(t=>`
+    <button class="ts-tag ${t.color}${selTagIds.includes(t.id)?' sel':''}" onclick="toggleSelTag('${t.id}')">${esc(t.name)}</button>
+  `).join('')+`<button class="ts-add" onclick="openSheet('tagMgSheet');renderTagMg()">+ 新增</button>`;
+}
+window.toggleSelTag=id=>{
+  selTagIds=selTagIds.includes(id)?selTagIds.filter(x=>x!==id):[...selTagIds,id];
+  buildTagSelector();
+};
+
+/* ───── Render ───── */
+function render(){
+  const q=sq.toLowerCase();
+  const vis=db.items.filter(it=>{
+    if(fType!=='all'&&it.type!==fType)return false;
+    if(fStatus!=='all'&&it.status!==fStatus)return false;
+    if(fTag&&!(it.tags||[]).includes(fTag))return false;
+    if(q){
+      const tagNames=(it.tags||[]).map(id=>tagById(id)?.name||'').join(' ').toLowerCase();
+      if(!it.title.toLowerCase().includes(q)&&!(it.note||'').toLowerCase().includes(q)&&!(it.review||'').toLowerCase().includes(q)&&!tagNames.includes(q))return false;
+    }
+    return true;
+  });
+
+  // stats
+  const cnt={want:0,doing:0,done:0};
+  db.items.forEach(i=>cnt[i.status]=(cnt[i.status]||0)+1);
+  document.getElementById('statsStrip').innerHTML=
+    `<div class="ss"><div class="ss-n">${db.items.length}</div><div class="ss-l">全部</div></div>`+
+    ['want','doing','done'].map(s=>`<div class="ss"><div class="ss-n">${cnt[s]||0}</div><div class="ss-l">${SL[s]}</div></div>`).join('');
+
+  // filter bar
+  const typeChips=[['all','全部'],...db.types.map(t=>[t,t])];
+  const statusChips=['want','doing','done'].map(s=>[s,SL[s]]);
+  let fb=typeChips.map(([v,l])=>`<button class="fchip${fType===v?' on':''}" onclick="setFType('${v}')">${l}</button>`).join('');
+  fb+=`<div class="sep"></div>`;
+  fb+=statusChips.map(([v,l])=>`<button class="fchip${fStatus===v?' on':''}" onclick="setFStat('${v}')">${l}</button>`).join('');
+  if(db.tags.length){
+    fb+=`<div class="sep"></div>`;
+    fb+=db.tags.map(t=>`<button class="fchip tag-chip ${t.color}${fTag===t.id?' on':''}" onclick="setFTag('${t.id}')">${esc(t.name)}</button>`).join('');
+  }
+  if(fType!=='all'||fStatus!=='all'||fTag) fb+=`<button class="fchip" onclick="clearF()">清除</button>`;
+  document.getElementById('filterBar').innerHTML=fb;
+
+  // list
+  const wrap=document.getElementById('listWrap');
+  if(!vis.length){
+    wrap.innerHTML=`<div class="empty">尚無項目<br><span style="font-size:12px;font-family:var(--fm)">點右下角 + 新增</span></div>`;
+    return;
+  }
+  wrap.innerHTML=vis.map(it=>{
+    const itTags=(it.tags||[]).map(id=>{const t=tagById(id);return t?`<span class="ctag col ${t.color}">${esc(t.name)}</span>`:''}).join('');
+    const hasDone=it.status==='done'&&(it.score!=null||it.review);
+    return`<div class="card s-${it.status}" onclick="openEdit('${it.id}')">
+      <div class="card-top">
+        <div class="card-main">
+          <div class="card-title">${esc(it.title)}</div>
+          <div class="card-sub">
+            <span class="ctag">${it.type}</span>
+            <span class="ctag status-${it.status}">${SL[it.status]}</span>
+            ${itTags}
+          </div>
+        </div>
+        <div class="card-right">
+          <button class="cycle-btn" onclick="event.stopPropagation();cycleStatus('${it.id}')">${SL[SN[it.status]]}</button>
+          <span class="del-btn" onclick="event.stopPropagation();del('${it.id}')">x</span>
+        </div>
+      </div>
+      ${it.note?`<div class="card-note">${esc(it.note)}</div>`:''}
+      ${hasDone?`<div class="card-review">
+        ${it.score!=null?`<div class="score-row"><span class="score-num">${it.score}</span><span class="score-of">/ 10</span></div>${scoreBars(it.score)}`:''}
+        ${it.review?`<div class="review-body">${esc(it.review)}</div>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function setFType(v){fType=v;render()}
+function setFStat(v){fStatus=v;render()}
+function setFTag(v){fTag=fTag===v?'':v;render()}
+function clearF(){fType='all';fStatus='all';fTag='';render()}
+
+window.cycleStatus=id=>{
+  const it=db.items.find(x=>x.id===id);
+  if(it){it.status=SN[it.status];save();render()}
+};
+window.del=id=>{
+  if(!confirm('確定刪除？'))return;
+  db.items=db.items.filter(x=>x.id!==id);save();render();
+};
+
+/* ───── Sheet system ───── */
+const overlay=document.getElementById('overlay');
+let sheetStack=[];
+function openSheet(id){
+  const sh=document.getElementById(id);
+  sh.classList.add('open');
+  overlay.classList.add('open');
+  sheetStack.push(id);
+}
+function closeTop(){
+  if(!sheetStack.length)return;
+  const id=sheetStack.pop();
+  document.getElementById(id).classList.remove('open');
+  if(!sheetStack.length) overlay.classList.remove('open');
+}
+function closeAll(){
+  sheetStack.forEach(id=>document.getElementById(id).classList.remove('open'));
+  sheetStack=[];
+  overlay.classList.remove('open');
+}
+window.openFromMenu=id=>{closeTop();openSheet(id)};
+overlay.addEventListener('click',closeTop);
+
+/* ───── Add/Edit ───── */
+function buildTypeSelect(){
+  document.getElementById('fType').innerHTML=db.types.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+function prepareForm(it){
+  buildTypeSelect();
+  document.getElementById('sheetTitle').textContent=it?'編輯':'新增';
+  document.getElementById('fTitle').value=it?.title||'';
+  document.getElementById('fNote').value=it?.note||'';
+  document.getElementById('fReview').value=it?.review||'';
+  document.getElementById('fType').value=it?.type||db.types[0];
+  document.getElementById('fStatus').value=it?.status||'want';
+  selScore=it?.score??null;
+  selTagIds=[...(it?.tags||[])];
+  buildTagSelector();
+  const isDone=(it?.status||'want')==='done';
+  document.getElementById('doneBox').style.display=isDone?'block':'none';
+  if(isDone)buildScore(selScore);
+}
+
+window.onStatusChange=()=>{
+  const s=document.getElementById('fStatus').value;
+  document.getElementById('doneBox').style.display=s==='done'?'block':'none';
+  if(s==='done')buildScore(selScore);
+};
+
+document.getElementById('fab').addEventListener('click',()=>{
+  editId=null;prepareForm(null);openSheet('addSheet');
+  setTimeout(()=>document.getElementById('fTitle').focus(),280);
+});
+window.openEdit=id=>{
+  editId=id;prepareForm(db.items.find(x=>x.id===id));openSheet('addSheet');
+};
+
+document.getElementById('cancelAdd').addEventListener('click',closeTop);
+document.getElementById('confirmAdd').addEventListener('click',()=>{
+  const title=document.getElementById('fTitle').value.trim();
+  if(!title){document.getElementById('fTitle').focus();return}
+  const status=document.getElementById('fStatus').value;
+  const obj={title,type:document.getElementById('fType').value,status,
+    note:document.getElementById('fNote').value.trim(),
+    tags:[...selTagIds],
+    score:status==='done'?selScore:null,
+    review:status==='done'?document.getElementById('fReview').value.trim():''};
+  if(editId){const i=db.items.findIndex(x=>x.id===editId);if(i>-1)db.items[i]={...db.items[i],...obj}}
+  else{obj.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);db.items.unshift(obj)}
+  save();render();closeAll();
+});
+
+/* ───── Search ───── */
+const si=document.getElementById('searchInput');
+const sc=document.getElementById('searchClear');
+si.addEventListener('input',e=>{
+  sq=e.target.value;
+  sc.style.display=sq?'block':'none';
+  render();
+});
+sc.addEventListener('click',()=>{sq='';si.value='';sc.style.display='none';render()});
+
+/* ───── Menu ───── */
+document.getElementById('menuBtn').addEventListener('click',()=>openSheet('menuSheet'));
+document.getElementById('cancelMenu').addEventListener('click',closeTop);
+
+/* ───── IO ───── */
+document.getElementById('cancelIo').addEventListener('click',closeTop);
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({version:3,exported:new Date().toISOString(),db},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`walden-shelf_${ts()}.json`;a.click();
+});
+document.getElementById('importTrigger').addEventListener('click',()=>document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const incoming=data.db||{items:data.items||(Array.isArray(data)?data:[]),tags:data.tags||[],types:data.types||[...DEFAULT_TYPES]};
+      const mode=document.getElementById('importMode').value;
+      if(mode==='replace'){
+        db=incoming;if(!db.types)db.types=[...DEFAULT_TYPES];
+      } else {
+        const ids=new Set(db.items.map(x=>x.id)),titles=new Set(db.items.map(x=>x.title));
+        const added=incoming.items.filter(x=>!ids.has(x.id)&&!titles.has(x.title));
+        db.items=[...db.items,...added];
+        // merge tags
+        const tids=new Set(db.tags.map(x=>x.id));
+        (incoming.tags||[]).filter(t=>!tids.has(t.id)).forEach(t=>db.tags.push(t));
+        // merge types
+        const existing=new Set(db.types);
+        (incoming.types||[]).filter(t=>!existing.has(t)).forEach(t=>db.types.push(t));
+        alert(`合併完成：新增 ${added.length} 筆項目`);
+      }
+      save();render();closeAll();
+    }catch{alert('JSON 格式有誤')}
+  };
+  r.readAsText(f);e.target.value='';
+});
+
+/* ───── Tag manage ───── */
+function renderTagMg(){
+  document.getElementById('tagMgList').innerHTML=db.tags.length
+    ?db.tags.map(t=>`<div class="tm-row">
+      <div class="tm-dot ${t.color}" style="background:${TC_COLORS.find(c=>c.cls===t.color)?.bg||'#888'}"></div>
+      <span class="tm-name">${esc(t.name)}</span>
+      <span class="tm-del" onclick="delTag('${t.id}')">刪除</span>
+    </div>`).join('')
+    :`<p style="font-size:13px;color:var(--tx3);padding:8px 0">尚無標籤</p>`;
+  buildColorPicks();
+}
+function buildColorPicks(){
+  document.getElementById('colorPicks').innerHTML=TC_COLORS.map(c=>
+    `<div class="cp${selNewTagColor===c.cls?' sel':''}" style="background:${c.bg}" title="${c.label}" onclick="selColor('${c.cls}')"></div>`
+  ).join('');
+}
+window.selColor=c=>{selNewTagColor=c;buildColorPicks()};
+window.addTag=()=>{
+  const name=document.getElementById('newTagName').value.trim();
+  if(!name)return;
+  if(db.tags.find(t=>t.name===name)){alert('標籤已存在');return}
+  db.tags.push({id:'t'+Date.now().toString(36),name,color:selNewTagColor});
+  document.getElementById('newTagName').value='';
+  save();renderTagMg();
+  // rebuild selector in addSheet if it's open underneath
+  if(sheetStack.includes('addSheet')) buildTagSelector();
+};
+window.delTag=id=>{
+  if(!confirm('刪除此標籤？'))return;
+  db.tags=db.tags.filter(t=>t.id!==id);
+  db.items.forEach(it=>{it.tags=(it.tags||[]).filter(x=>x!==id)});
+  selTagIds=selTagIds.filter(x=>x!==id);
+  save();renderTagMg();render();
+  if(sheetStack.includes('addSheet')) buildTagSelector();
+};
+document.getElementById('cancelTagMg').addEventListener('click',closeTop);
+
+/* ───── Type manage ───── */
+function renderTypeMg(){
+  document.getElementById('typeMgList').innerHTML=db.types.map(t=>`
+    <div class="type-row">
+      <span class="type-name">${esc(t)}</span>
+      ${DEFAULT_TYPES.includes(t)?'<span style="font-size:11px;font-family:var(--fm);color:var(--tx3);padding:4px 8px">預設</span>':
+        `<span class="type-del" onclick="delType('${esc(t)}')">刪除</span>`}
+    </div>`).join('');
+}
+window.addType=()=>{
+  const name=document.getElementById('newTypeName').value.trim();
+  if(!name)return;
+  if(db.types.includes(name)){alert('分類已存在');return}
+  db.types.push(name);
+  document.getElementById('newTypeName').value='';
+  save();renderTypeMg();
+};
+window.delType=t=>{
+  if(db.items.find(it=>it.type===t)){if(!confirm(`有項目使用「${t}」，刪除分類後這些項目仍保留。確定？`))return}
+  db.types=db.types.filter(x=>x!==t);
+  save();renderTypeMg();
+};
+document.getElementById('cancelTypeMg').addEventListener('click',closeTop);
+
+/* ───── Boot ───── */
+render();
+
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('install',e=>{self.skipWaiting()});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+}
+</script>
+</body>
+</html>
