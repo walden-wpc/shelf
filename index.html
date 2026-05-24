@@ -56,6 +56,10 @@ html[data-theme="light"]{
 .tc5{--tc-bg:rgba(120,165,180,.18);--tc-bdr:rgba(120,165,180,.45);--tc-txt:#1a5464}
 .tc6{--tc-bg:rgba(160,148,108,.18);--tc-bdr:rgba(160,148,108,.45);--tc-txt:#5a4a10}
 .tc7{--tc-bg:rgba(150,120,185,.18);--tc-bdr:rgba(150,120,185,.45);--tc-txt:#522878}
+.tc8{--tc-bg:rgba(220,100,100,.15);--tc-bdr:rgba(220,100,100,.4);--tc-txt:#8b1a1a}
+.tc9{--tc-bg:rgba(80,180,160,.15);--tc-bdr:rgba(80,180,160,.4);--tc-txt:#0d5c50}
+.tc10{--tc-bg:rgba(200,160,220,.15);--tc-bdr:rgba(200,160,220,.4);--tc-txt:#5c2878}
+.tc11{--tc-bg:rgba(240,180,80,.15);--tc-bdr:rgba(240,180,80,.4);--tc-txt:#7a4e00}
 html[data-theme="dark"] .tc0,@media(prefers-color-scheme:dark){html:not([data-theme]) .tc0}{--tc-txt:#e0c070}
 html[data-theme="dark"] .tc1{--tc-txt:#74c882}
 html[data-theme="dark"] .tc2{--tc-txt:#78aaee}
@@ -64,6 +68,10 @@ html[data-theme="dark"] .tc4{--tc-txt:#d49070}
 html[data-theme="dark"] .tc5{--tc-txt:#72c0d4}
 html[data-theme="dark"] .tc6{--tc-txt:#c8b870}
 html[data-theme="dark"] .tc7{--tc-txt:#b890e0}
+html[data-theme="dark"] .tc8{--tc-txt:#f08080}
+html[data-theme="dark"] .tc9{--tc-txt:#60d4b8}
+html[data-theme="dark"] .tc10{--tc-txt:#d8a0f0}
+html[data-theme="dark"] .tc11{--tc-txt:#f0c840}
 @media(prefers-color-scheme:dark){
   html:not([data-theme]) .tc0{--tc-txt:#e0c070}
   html:not([data-theme]) .tc1{--tc-txt:#74c882}
@@ -73,10 +81,14 @@ html[data-theme="dark"] .tc7{--tc-txt:#b890e0}
   html:not([data-theme]) .tc5{--tc-txt:#72c0d4}
   html:not([data-theme]) .tc6{--tc-txt:#c8b870}
   html:not([data-theme]) .tc7{--tc-txt:#b890e0}
+  html:not([data-theme]) .tc8{--tc-txt:#f08080}
+  html:not([data-theme]) .tc9{--tc-txt:#60d4b8}
+  html:not([data-theme]) .tc10{--tc-txt:#d8a0f0}
+  html:not([data-theme]) .tc11{--tc-txt:#f0c840}
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);overscroll-behavior:none;-webkit-text-size-adjust:100%;font-size:16px}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);overscroll-behavior:none;-webkit-text-size-adjust:100%;font-size:17px}
 #app{display:flex;flex-direction:column;height:100dvh;max-width:640px;margin:0 auto}
 
 header{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--ln);padding:calc(var(--safe-t) + 12px) 16px 0}
@@ -206,11 +218,26 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .io-card-note{font-size:11px;font-family:var(--fm);color:var(--tx3);letter-spacing:.03em}
 
 .tag-manage-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-.tm-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--ln)}
-.tm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.tm-name{flex:1;font-size:14px;color:var(--tx)}
-.tm-del{font-family:var(--fm);font-size:12px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:4px}
-.tm-del:active{background:var(--bg4)}
+.tg-group{margin-bottom:6px}
+.tg-group-header{display:flex;align-items:center;justify-content:space-between;padding:4px 0;margin-bottom:3px;border-bottom:1px solid var(--ln)}
+.tg-group-name{font-size:11px;font-family:var(--fm);color:var(--tx3);letter-spacing:.06em}
+.tg-group-del{font-size:11px;font-family:var(--fm);color:var(--tx3);cursor:pointer;padding:3px 8px;border-radius:4px;background:transparent;border:1px solid var(--ln);min-height:26px}
+.tg-group-del:active{background:var(--bg4)}
+.tg-group-empty{font-size:11px;font-family:var(--fm);color:var(--tx3);padding:6px 6px;font-style:italic}
+.tg-group-tags{display:flex;flex-wrap:wrap;gap:6px;padding:4px 6px 6px;align-items:flex-start}
+.tg-group-empty{font-size:11px;font-family:var(--fm);color:var(--tx3);padding:4px 6px;font-style:italic}
+.tm-row{display:inline-flex;align-items:center;gap:4px;padding:5px 8px 5px 11px;border-radius:999px;border:1px solid var(--tc-bdr);background:var(--tc-bg);color:var(--tc-txt);font-size:12px;font-family:var(--f);max-width:100%}
+.tm-name{font-size:12px;color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.tm-group-select{font-size:10px;font-family:var(--fm);color:var(--tc-txt);background:transparent;border:none;border-left:1px solid var(--tc-bdr);padding:0 4px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:56px;opacity:.8}
+.tm-del{font-family:var(--fm);font-size:13px;cursor:pointer;opacity:.7;line-height:1;padding:2px 5px;color:inherit;flex-shrink:0;background:transparent;border:none;min-width:24px;min-height:24px}
+.tm-del:active{opacity:1}
+.add-group-toggle{width:100%;font-size:12px;font-family:var(--fm);color:var(--tx3);background:transparent;border:1px dashed var(--ln2);border-radius:var(--radius-sm);padding:7px 12px;cursor:pointer;text-align:left;margin-bottom:8px}
+.add-group-toggle:active{background:var(--bg3)}
+.add-group-panel{display:none;margin-bottom:12px}
+.add-group-panel.open{display:flex;gap:8px}
+.add-group-row{display:flex;gap:8px}
+.tg-selector-group{margin-bottom:8px}
+.tg-selector-label{font-size:10px;font-family:var(--fm);color:var(--tx3);letter-spacing:.06em;margin-bottom:5px}
 .add-tag-row{display:flex;gap:8px;align-items:flex-end}
 .add-tag-row .finput{flex:1;margin-bottom:0}
 .color-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;margin-bottom:14px}
@@ -339,11 +366,22 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 <div class="sheet" id="tagMgSheet">
   <div class="sh-handle"></div>
   <div class="sh-title">管理標籤</div>
-  <div class="tag-manage-list" id="tagMgList"></div>
+  <div id="tagMgList"></div>
+  <button class="add-group-toggle" id="addGroupToggle" onclick="toggleAddGroup()">+ 新增群組</button>
+  <div class="add-group-panel" id="addGroupPanel">
+    <input id="newGroupName" type="text" class="finput" placeholder="群組名稱" autocomplete="off" style="min-height:44px;flex:1">
+    <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addGroup()">新增</button>
+  </div>
   <div class="field"><label>新增標籤</label>
-    <div class="add-tag-row">
+    <div class="add-tag-row" style="margin-bottom:8px">
       <input id="newTagName" type="text" class="finput" placeholder="標籤名稱" autocomplete="off" style="min-height:44px">
       <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addTag()">新增</button>
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <label>加入群組</label>
+      <select id="newTagGroup" class="fselect" aria-label="加入群組">
+        <option value="">未分類</option>
+      </select>
     </div>
     <div class="color-picks" id="colorPicks"></div>
   </div>
@@ -373,6 +411,8 @@ const TC_COLORS=[
   {cls:'tc2',bg:'#7194c4',label:'藍'},{cls:'tc3',bg:'#b9789b',label:'紫紅'},
   {cls:'tc4',bg:'#b4785a',label:'棕'},{cls:'tc5',bg:'#78a5b4',label:'青'},
   {cls:'tc6',bg:'#a0946c',label:'橄欖'},{cls:'tc7',bg:'#9678b9',label:'紫'},
+  {cls:'tc8',bg:'#dc6464',label:'紅'},{cls:'tc9',bg:'#50b4a0',label:'薄荷'},
+  {cls:'tc10',bg:'#c8a0dc',label:'淡紫'},{cls:'tc11',bg:'#f0b450',label:'琥珀'},
 ];
 const DEFAULT_TYPES=['書','電影','影集','靈感','Podcast','其他'];
 
@@ -387,6 +427,7 @@ function initDB(){
 let db=loadDB()||initDB();
 if(!db.types)db.types=[...DEFAULT_TYPES];
 if(!db.tags)db.tags=[];
+if(!db.groups)db.groups=[];
 // migrate old status values
 db.items.forEach(it=>{
   if(it.status==='want')return;
@@ -450,8 +491,37 @@ let editId=null,selTagIds=[],selNewTagColor='tc0';
 function buildTagSelector(){
   const el=document.getElementById('tagSelector');
   if(!db.tags.length){el.innerHTML=`<span style="font-size:13px;color:var(--tx3);font-family:var(--fm)">尚無標籤，可至選單新增</span>`;return}
-  el.innerHTML=db.tags.map(t=>`<button class="ts-tag ${t.color}${selTagIds.includes(t.id)?' sel':''}" onclick="toggleSelTag('${t.id}')">${esc(t.name)}</button>`).join('')+
-    `<button class="ts-add" onclick="openSheet('tagMgSheet');renderTagMg()">+ 新增</button>`;
+
+  // group tags
+  const grouped={};
+  db.tags.forEach(t=>{
+    const g=t.group||'';
+    if(!grouped[g])grouped[g]=[];
+    grouped[g].push(t);
+  });
+
+  // named groups first, unnamed last
+  const namedGroups=db.groups.filter(g=>grouped[g]?.length);
+  const ungrouped=grouped['']||[];
+
+  let html='';
+  namedGroups.forEach(g=>{
+    html+=`<div class="tg-selector-group">`;
+    html+=`<div class="tg-selector-label">${esc(g)}</div>`;
+    html+=`<div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    html+=grouped[g].map(t=>`<button class="ts-tag ${t.color}${selTagIds.includes(t.id)?' sel':''}" onclick="toggleSelTag('${t.id}')">${esc(t.name)}</button>`).join('');
+    html+=`</div></div>`;
+  });
+  if(ungrouped.length){
+    if(namedGroups.length) html+=`<div class="tg-selector-group">`;
+    if(namedGroups.length) html+=`<div class="tg-selector-label">未分類</div>`;
+    html+=`<div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    html+=ungrouped.map(t=>`<button class="ts-tag ${t.color}${selTagIds.includes(t.id)?' sel':''}" onclick="toggleSelTag('${t.id}')">${esc(t.name)}</button>`).join('');
+    html+=`</div>`;
+    if(namedGroups.length) html+=`</div>`;
+  }
+  html+=`<button class="ts-add" onclick="openSheet('tagMgSheet');renderTagMg()">+ 新增</button>`;
+  el.innerHTML=html;
 }
 window.toggleSelTag=id=>{
   selTagIds=selTagIds.includes(id)?selTagIds.filter(x=>x!==id):[...selTagIds,id];
@@ -610,6 +680,8 @@ document.getElementById('fileInput').addEventListener('change',e=>{
         (incoming.tags||[]).filter(t=>!tids.has(t.id)).forEach(t=>db.tags.push(t));
         const existing=new Set(db.types);
         (incoming.types||[]).filter(t=>!existing.has(t)).forEach(t=>db.types.push(t));
+        const existingGroups=new Set(db.groups);
+        (incoming.groups||[]).filter(g=>!existingGroups.has(g)).forEach(g=>db.groups.push(g));
         alert(`合併完成：新增 ${added.length} 筆項目`);
       }
       save();render();closeAll();
@@ -619,21 +691,128 @@ document.getElementById('fileInput').addEventListener('change',e=>{
 });
 
 /* ── Tag manage ── */
+function buildGroupSelect(selectId, currentVal=''){
+  const el=document.getElementById(selectId);
+  if(!el)return;
+  el.innerHTML=`<option value="">未分類</option>`+db.groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  el.value=currentVal;
+}
+
+
 function renderTagMg(){
-  document.getElementById('tagMgList').innerHTML=db.tags.length
-    ?db.tags.map(t=>`<div class="tm-row"><div class="tm-dot" style="background:${TC_COLORS.find(c=>c.cls===t.color)?.bg||'#888'}"></div><span class="tm-name">${esc(t.name)}</span><span class="tm-del" onclick="delTag('${t.id}')">刪除</span></div>`).join('')
-    :`<p style="font-size:13px;color:var(--tx3);padding:8px 0">尚無標籤</p>`;
+  const el=document.getElementById('tagMgList');
+
+  const grouped={};
+  db.tags.forEach(t=>{const g=t.group||'';if(!grouped[g])grouped[g]=[];grouped[g].push(t);});
+  const ungrouped=grouped['']||[];
+  const groupOptions='<option value="">未分類</option>'+db.groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+
+  function tagRow(t){
+    return`<div class="tm-row ${t.color}" data-tid="${t.id}">
+      <span class="tm-name">${esc(t.name)}</span>
+      <select class="tm-group-select" aria-label="所屬群組" data-tid="${t.id}">${groupOptions}</select>
+      <button class="tm-del" data-del-tag="${t.id}">×</button>
+    </div>`;
+  }
+
+  let html='';
+  db.groups.forEach((g,gIdx)=>{
+    const tags=grouped[g]||[];
+    html+=`<div class="tg-group">
+      <div class="tg-group-header">
+        <span class="tg-group-name">${esc(g)}</span>
+        <button class="tg-group-del" data-del-group="${gIdx}">移除群組</button>
+      </div>
+      <div class="tg-group-tags">${tags.length?tags.map(tagRow).join(''):`<div class="tg-group-empty">尚無標籤</div>`}</div>
+    </div>`;
+  });
+  if(ungrouped.length){
+    html+=`<div class="tg-group">`;
+    if(db.groups.length) html+=`<div class="tg-group-header"><span class="tg-group-name">未分類</span></div>`;
+    html+=`<div class="tg-group-tags">${ungrouped.map(tagRow).join('')}</div></div>`;
+  }
+  if(!db.tags.length&&!db.groups.length){
+    html=`<p style="font-size:13px;color:var(--tx3);padding:8px 0;font-family:var(--fm)">尚無標籤</p>`;
+  }
+  el.innerHTML=html;
+
+  db.tags.forEach(t=>{
+    const sel=el.querySelector(`select[data-tid="${t.id}"]`);
+    if(sel) sel.value=t.group||'';
+  });
+
+  el.querySelectorAll('button[data-del-tag]').forEach(btn=>{
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      const id=this.getAttribute('data-del-tag');
+      if(!confirm('刪除此標籤？'))return;
+      db.tags=db.tags.filter(t=>t.id!==id);
+      db.items.forEach(it=>{it.tags=(it.tags||[]).filter(x=>x!==id)});
+      selTagIds=selTagIds.filter(x=>x!==id);
+      save();renderTagMg();render();
+      if(sheetStack.includes('addSheet'))buildTagSelector();
+    });
+  });
+
+  el.querySelectorAll('button[data-del-group]').forEach(btn=>{
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      const idx=parseInt(this.getAttribute('data-del-group'));
+      if(isNaN(idx)||idx<0||idx>=db.groups.length)return;
+      const name=db.groups[idx];
+      if(!confirm(`移除「${name}」群組？標籤會移到未分類。`))return;
+      db.groups.splice(idx,1);
+      db.tags.forEach(t=>{if(t.group===name)t.group='';});
+      save();renderTagMg();
+      if(sheetStack.includes('addSheet'))buildTagSelector();
+    });
+  });
+
+  el.querySelectorAll('select[data-tid]').forEach(sel=>{
+    sel.addEventListener('change',function(){
+      const id=this.getAttribute('data-tid');
+      const t=db.tags.find(x=>x.id===id);
+      if(t){t.group=this.value;save();}
+      if(sheetStack.includes('addSheet'))buildTagSelector();
+    });
+  });
+
   buildColorPicks();
+  buildGroupSelect('newTagGroup');
 }
 function buildColorPicks(){
   document.getElementById('colorPicks').innerHTML=TC_COLORS.map(c=>`<div class="cp${selNewTagColor===c.cls?' sel':''}" style="background:${c.bg}" title="${c.label}" onclick="selColor('${c.cls}')"></div>`).join('');
 }
 window.selColor=c=>{selNewTagColor=c;buildColorPicks()};
+window.toggleAddGroup=()=>{
+  const panel=document.getElementById('addGroupPanel');
+  const btn=document.getElementById('addGroupToggle');
+  const open=panel.classList.toggle('open');
+  btn.textContent=open?'− 新增群組':'+ 新增群組';
+  if(open) document.getElementById('newGroupName').focus();
+};
+window.addGroup=()=>{
+  const name=document.getElementById('newGroupName').value.trim();
+  if(!name)return;
+  if(db.groups.includes(name)){alert('群組已存在');return}
+  db.groups.push(name);
+  document.getElementById('newGroupName').value='';
+  document.getElementById('addGroupPanel').classList.remove('open');
+  document.getElementById('addGroupToggle').textContent='+ 新增群組';
+  save();renderTagMg();
+  if(sheetStack.includes('addSheet'))buildTagSelector();
+};
+window.setTagGroup=(id,group)=>{
+  const t=db.tags.find(x=>x.id===id);
+  if(t){t.group=group;save();}
+  if(sheetStack.includes('addSheet'))buildTagSelector();
+};
 window.addTag=()=>{
   const name=document.getElementById('newTagName').value.trim();
   if(!name)return;
   if(db.tags.find(t=>t.name===name)){alert('標籤已存在');return}
-  db.tags.push({id:'t'+Date.now().toString(36),name,color:selNewTagColor});
+  const group=document.getElementById('newTagGroup')?.value||'';
+  db.tags.push({id:'t'+Date.now().toString(36),name,color:selNewTagColor,group});
   document.getElementById('newTagName').value='';
   save();renderTagMg();
   if(sheetStack.includes('addSheet'))buildTagSelector();
