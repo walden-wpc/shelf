@@ -84,6 +84,9 @@ header{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--ln);padd
 h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .hdr-menu-btn{font-size:22px;font-family:var(--fm);color:var(--tx3);background:none;border:none;cursor:pointer;padding:4px 8px;line-height:1;border-radius:var(--radius-sm);min-height:36px}
 .hdr-menu-btn:active{background:var(--bg3)}
+.view-toggle{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:none;cursor:pointer;color:var(--tx3);border-radius:var(--radius-sm);padding:0;transition:color .15s}
+.view-toggle:active{background:var(--bg3)}
+.view-toggle.on{color:var(--tx)}
 
 .search-row{padding-bottom:10px}
 .search-wrap{position:relative}
@@ -220,12 +223,19 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .type-del{font-family:var(--fm);font-size:12px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:4px}
 .type-del:active{background:var(--bg4)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 </head>
 <body>
 <div id="app">
   <header>
     <div class="hdr">
       <h1>walden-shelf</h1>
+      <button class="view-toggle" id="viewToggle" aria-label="切換關係圖譜">
+        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 10C2 10 4.5 5 10 5C15.5 5 18 10 18 10C18 10 15.5 15 10 15C4.5 15 2 10 2 10Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+      </button>
       <button class="hdr-menu-btn" id="menuBtn" aria-label="開啟選單">···</button>
     </div>
     <div class="search-row">
@@ -248,6 +258,11 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
     </select>
   </div>
   <div class="list-wrap" id="listWrap"></div>
+  <div class="graph-view" id="graphView" style="display:none;flex:1;overflow:hidden;padding:14px;flex-direction:column;gap:10px">
+    <svg id="graphSvg" style="width:100%;flex:1;background:var(--bg2);border-radius:var(--radius)"></svg>
+    <div id="graphLegend" style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-family:var(--fm);color:var(--tx2)"></div>
+    <div id="graphEmpty" style="display:none;align-items:center;justify-content:center;font-size:13px;color:var(--tx3);font-family:var(--fm)">尚無足夠資料</div>
+  </div>
 </div>
 
 <button class="fab" id="fab" aria-label="新增">+</button>
@@ -649,6 +664,134 @@ window.delType=t=>{
   db.types=db.types.filter(x=>x!==t);save();renderTypeMg();
 };
 document.getElementById('cancelTypeMg').addEventListener('click',closeTop);
+
+/* ── Graph toggle ── */
+let graphMode = false;
+document.getElementById('cancelGraph')?.addEventListener('click',closeTop);
+
+document.getElementById('viewToggle').addEventListener('click', () => {
+  graphMode = !graphMode;
+  const btn = document.getElementById('viewToggle');
+  const listWrap = document.getElementById('listWrap');
+  const graphView = document.getElementById('graphView');
+  const statsStrip = document.getElementById('statsStrip');
+  const filterRows = document.querySelectorAll('.filter-row');
+  if(graphMode){
+    btn.classList.add('on');
+    listWrap.style.display = 'none';
+    graphView.style.display = 'flex';
+    statsStrip.style.display = 'none';
+    filterRows.forEach(r => r.style.display = 'none');
+    renderGraph();
+  } else {
+    btn.classList.remove('on');
+    listWrap.style.display = '';
+    graphView.style.display = 'none';
+    statsStrip.style.display = '';
+    filterRows.forEach(r => r.style.display = '');
+  }
+});
+
+function renderGraph(){
+  const svg = document.getElementById('graphSvg');
+  svg.innerHTML = '';
+  const graphView = document.getElementById('graphView');
+  const W = graphView.clientWidth - 28 || 340;
+  const H = Math.max(window.innerHeight * 0.55, 320);
+  svg.style.height = H + 'px';
+
+  const nodes = [], links = [];
+  const nodeMap = {};
+
+  db.types.forEach(t => {
+    const id = 'type:'+t;
+    nodeMap[id] = {id, label:t, kind:'type'};
+    nodes.push(nodeMap[id]);
+  });
+  db.tags.forEach(t => {
+    const id = 'tag:'+t.id;
+    nodeMap[id] = {id, label:t.name, kind:'tag', color:t.color};
+    nodes.push(nodeMap[id]);
+  });
+  db.items.forEach(it => {
+    const id = 'item:'+it.id;
+    nodeMap[id] = {id, label:it.title, kind:'item', status:it.status};
+    nodes.push(nodeMap[id]);
+    const tId = 'type:'+it.type;
+    if(nodeMap[tId]) links.push({source:tId, target:id});
+    (it.tags||[]).forEach(tid => {
+      const gId = 'tag:'+tid;
+      if(nodeMap[gId]) links.push({source:gId, target:id});
+    });
+  });
+
+  const emptyEl = document.getElementById('graphEmpty');
+  if(nodes.length < 2){
+    emptyEl.style.display = 'flex'; svg.style.display = 'none'; return;
+  }
+  emptyEl.style.display = 'none'; svg.style.display = '';
+
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark' ||
+    (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+
+  const COL = {
+    type: isDark?'#e8e8e2':'#111110',
+    tag:  '#b89a5a',
+    item: isDark?'#484840':'#d0d0ca',
+    itemText: isDark?'#c0c0b8':'#484840',
+    link: isDark?'#2e2e2a':'#d4d4d0',
+  };
+  const TC_HEX = {tc0:'#dbb677',tc1:'#7aa882',tc2:'#7194c4',tc3:'#b9789b',tc4:'#b4785a',tc5:'#78a5b4',tc6:'#a0946c',tc7:'#9678b9'};
+
+  const S = d3.select(svg).attr('viewBox',`0 0 ${W} ${H}`);
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d=>d.id).distance(d=>d.source.kind==='type'||d.target.kind==='type'?80:55).strength(0.6))
+    .force('charge', d3.forceManyBody().strength(-180))
+    .force('center', d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide().radius(d=>d.kind==='type'?28:d.kind==='tag'?22:16));
+
+  sim.stop();
+  for(let i=0;i<300;i++) sim.tick();
+  nodes.forEach(n=>{
+    const r=n.kind==='type'?28:n.kind==='tag'?22:16;
+    n.x=Math.max(r,Math.min(W-r,n.x));
+    n.y=Math.max(r,Math.min(H-r,n.y));
+  });
+
+  S.append('g').selectAll('line').data(links).enter().append('line')
+    .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+    .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y)
+    .attr('stroke',COL.link).attr('stroke-width',1);
+
+  const g = S.append('g').selectAll('g').data(nodes).enter().append('g');
+  g.each(function(d){
+    const el = d3.select(this);
+    if(d.kind==='type'){
+      el.append('circle').attr('r',14).attr('fill',COL.type).attr('cx',d.x).attr('cy',d.y);
+      el.append('text').attr('x',d.x).attr('y',d.y+4).attr('text-anchor','middle')
+        .attr('font-size','9px').attr('font-family','monospace')
+        .attr('fill',isDark?'#111':'#fff').text(d.label.length>4?d.label.slice(0,4):d.label);
+    } else if(d.kind==='tag'){
+      const col=TC_HEX[d.color]||COL.tag;
+      el.append('circle').attr('r',10).attr('fill',col).attr('cx',d.x).attr('cy',d.y).attr('opacity',0.85);
+      el.append('text').attr('x',d.x).attr('y',d.y+16).attr('text-anchor','middle')
+        .attr('font-size','8px').attr('font-family','monospace').attr('fill',col)
+        .text(d.label.length>5?d.label.slice(0,5)+'…':d.label);
+    } else {
+      el.append('circle').attr('r',5).attr('fill',COL.item).attr('cx',d.x).attr('cy',d.y)
+        .attr('stroke',isDark?'#484840':'#b8b8b0').attr('stroke-width',1);
+      el.append('text').attr('x',d.x).attr('y',d.y+13).attr('text-anchor','middle')
+        .attr('font-size','7px').attr('font-family','sans-serif').attr('fill',COL.itemText).attr('opacity',0.7)
+        .text(d.label.length>8?d.label.slice(0,8)+'…':d.label);
+    }
+  });
+
+  document.getElementById('graphLegend').innerHTML =
+    `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="${COL.type}"/></svg>分類</span>`+
+    `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="${COL.tag}"/></svg>標籤</span>`+
+    `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="${COL.item}" stroke="${isDark?'#484840':'#b8b8b0'}" stroke-width="1"/></svg>項目</span>`;
+}
 
 /* ── Boot ── */
 render();
