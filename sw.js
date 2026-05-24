@@ -1,4 +1,4 @@
-const CACHE = 'walden-shelf-v1';
+const CACHE = 'walden-shelf-v26.05.24';
 const ASSETS = [
   '/shelf/',
   '/shelf/index.html',

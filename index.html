@@ -796,7 +796,7 @@ function renderGraph(){
 /* ── Boot ── */
 render();
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/shelf/sw.js').catch(()=>{});
+  navigator.serviceWorker.register('/shelf/sw.js', {updateViaCache:'none'}).catch(()=>{});
 }
 </script>
 </body>
