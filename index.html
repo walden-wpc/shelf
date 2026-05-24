@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="shelf">
+<meta name="description" content="A personal tracker for books, films, series, podcasts, and ideas.">
 <meta name="theme-color" id="themeColor" content="#ffffff">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>walden-shelf</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
 <style>
 :root{
   --bg:#ffffff;--bg2:#f6f6f4;--bg3:#efefec;--bg4:#e8e8e4;
@@ -20,15 +20,15 @@
   --radius:10px;--radius-sm:6px;
   --safe-t:env(safe-area-inset-top,0px);
   --safe-b:env(safe-area-inset-bottom,0px);
-  --f:'Noto Sans TC',sans-serif;
-  --fm:'DM Mono',monospace;
+  --f: -apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --fm: 'SF Mono','Cascadia Code','Consolas',monospace;
   --sheet-bg:var(--bg);
 }
 /* dark forced */
 html[data-theme="dark"]{
   --bg:#111110;--bg2:#1a1a18;--bg3:#222220;--bg4:#2c2c28;
   --ln:#252522;--ln2:#343430;--ln3:#484840;
-  --tx:#e8e8e2;--tx2:#909088;--tx3:#585852;
+  --tx:#e8e8e2;--tx2:#909088;--tx3:#7a7a74;
   --sheet-bg:#1a1a18;
 }
 /* light forced */
@@ -43,7 +43,7 @@ html[data-theme="light"]{
   html:not([data-theme]){
     --bg:#111110;--bg2:#1a1a18;--bg3:#222220;--bg4:#2c2c28;
     --ln:#252522;--ln2:#343430;--ln3:#484840;
-    --tx:#e8e8e2;--tx2:#909088;--tx3:#585852;
+    --tx:#e8e8e2;--tx2:#909088;--tx3:#7a7a74;
     --sheet-bg:#1a1a18;
   }
 }
@@ -226,7 +226,7 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
   <header>
     <div class="hdr">
       <h1>walden-shelf</h1>
-      <button class="hdr-menu-btn" id="menuBtn" aria-label="選單">···</button>
+      <button class="hdr-menu-btn" id="menuBtn" aria-label="開啟選單">···</button>
     </div>
     <div class="search-row">
       <div class="search-wrap">
@@ -240,7 +240,7 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 
   <div class="stats-strip" id="statsStrip">
     <div class="stats-left" id="statsLeft"></div>
-    <select class="sort-select" id="sortSelect" onchange="render()">
+    <select class="sort-select" id="sortSelect" aria-label="排序方式" onchange="render()">
       <option value="newest">最新</option>
       <option value="oldest">最舊</option>
       <option value="score">評分</option>
@@ -259,9 +259,9 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
   <div class="sh-title" id="sheetTitle">新增</div>
   <div class="field"><label>標題</label><input id="fTitle" type="text" class="finput" placeholder="書名、片名或靈感標題" autocomplete="off"></div>
   <div class="row2">
-    <div class="field"><label>分類</label><select id="fType" class="fselect"></select></div>
+    <div class="field"><label>分類</label><select id="fType" class="fselect" aria-label="分類"></select></div>
     <div class="field"><label>狀態</label>
-      <select id="fStatus" class="fselect" onchange="onStatusChange()">
+      <select id="fStatus" class="fselect" aria-label="狀態" onchange="onStatusChange()">
         <option value="want">收藏</option>
         <option value="doing">進行中</option>
         <option value="done">完成</option>
@@ -311,7 +311,7 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
     <div class="io-card" id="importTrigger"><span class="io-card-title">匯入 JSON</span><span class="io-card-note">還原或合併資料</span></div>
   </div>
   <div class="field"><label>匯入模式</label>
-    <select id="importMode" class="fselect">
+    <select id="importMode" class="fselect" aria-label="匯入模式">
       <option value="merge">合併（保留現有，補入不重複項目）</option>
       <option value="replace">取代（清除現有，換成匯入資料）</option>
     </select>
