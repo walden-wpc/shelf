@@ -130,7 +130,6 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .list-wrap::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px}
 
 .card{background:var(--bg);border:1px solid var(--ln);border-radius:var(--radius);padding:13px 13px 11px;margin-bottom:8px;cursor:pointer}
-.card:active{background:var(--bg2)}
 .card.s-doing{border-left:3px solid var(--ln3);padding-left:11px}
 .card.s-done{border-left:3px solid var(--tx);padding-left:11px}
 .card.s-archived{opacity:.6}
@@ -146,12 +145,8 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .ctag.col{background:var(--tc-bg);border-color:var(--tc-bdr);color:var(--tc-txt)}
 
 .card-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0}
-.del-btn{font-size:12px;font-family:var(--fm);color:var(--tx3);cursor:pointer;padding:4px 6px;min-height:28px;display:flex;align-items:center;border-radius:var(--radius-sm)}
-.del-btn:active{background:var(--bg3);color:var(--tx)}
 
-.card-note{font-size:13px;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--ln);line-height:1.6}
-.card-review{margin-top:8px;padding-top:8px;border-top:1px solid var(--ln)}
-.score-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.card-review{margin-top:8px;padding-top:8px;border-top:1px solid var(--ln)}.score-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .score-num{font-size:19px;font-family:var(--fm);font-weight:300;color:var(--tx);line-height:1}
 .score-of{font-size:11px;font-family:var(--fm);color:var(--tx3)}
 .score-bar{display:flex;gap:3px}
@@ -232,11 +227,6 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .tm-group-select{font-size:10px;font-family:var(--fm);color:var(--tc-txt);background:transparent;border:none;border-left:1px solid var(--tc-bdr);padding:0 4px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:56px;opacity:.8}
 .tm-del{font-family:var(--fm);font-size:13px;cursor:pointer;opacity:.7;line-height:1;padding:2px 5px;color:inherit;flex-shrink:0;background:transparent;border:none;min-width:24px;min-height:24px}
 .tm-del:active{opacity:1}
-.add-group-toggle{width:100%;font-size:12px;font-family:var(--fm);color:var(--tx3);background:transparent;border:1px dashed var(--ln2);border-radius:var(--radius-sm);padding:7px 12px;cursor:pointer;text-align:left;margin-bottom:8px}
-.add-group-toggle:active{background:var(--bg3)}
-.add-group-panel{display:none;margin-bottom:12px}
-.add-group-panel.open{display:flex;gap:8px}
-.add-group-row{display:flex;gap:8px}
 .tg-selector-group{margin-bottom:8px}
 .tg-selector-label{font-size:10px;font-family:var(--fm);color:var(--tx3);letter-spacing:.06em;margin-bottom:5px}
 .add-tag-row{display:flex;gap:8px;align-items:flex-end}
@@ -250,6 +240,34 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .type-name{flex:1;font-size:14px;color:var(--tx)}
 .type-del{font-family:var(--fm);font-size:12px;color:var(--tx3);cursor:pointer;padding:4px 8px;border-radius:4px}
 .type-del:active{background:var(--bg4)}
+
+/* ── Card expand ── */
+.card{background:var(--bg);border:1px solid var(--ln);border-radius:var(--radius);padding:13px 13px 11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.card.expanded{border-color:var(--ln3)}
+.card-note{font-size:13px;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--ln);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card.expanded .card-note{display:block}
+.card-actions{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--ln)}
+.card.expanded .card-actions{display:flex;justify-content:space-between;align-items:center}
+.act-left{display:flex;gap:8px;align-items:center}
+.act-edit{width:50%;height:38px;border-radius:var(--radius-sm);border:1px solid var(--ln2);background:transparent;color:var(--tx2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act-edit:active{background:var(--bg3)}
+.act-link{width:38px;height:38px;border-radius:var(--radius-sm);border:1px solid var(--ln2);background:transparent;color:var(--tx2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0}
+.act-link:active{background:var(--bg3)}
+.del-btn{font-size:12px;font-family:var(--fm);color:var(--tx3);cursor:pointer;padding:4px 6px;min-height:28px;display:none;align-items:center;border-radius:var(--radius-sm)}
+.card.expanded .del-btn{display:flex}
+.del-btn:active{background:var(--bg3);color:var(--tx)}
+
+/* ── Tag section divider ── */
+.tag-section-divider{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.tag-section-label{font-size:11px;font-family:var(--fm);color:var(--tx3);letter-spacing:.07em;white-space:nowrap}
+.tag-section-divider::after{content:'';flex:1;height:1px;background:var(--ln)}
+.add-group-row-inline{display:flex;gap:8px;margin-bottom:12px}
+.add-tag-section{background:var(--bg3);border:1px solid var(--ln2);border-radius:var(--radius);padding:14px;margin-top:20px}
+.url-toggle-btn{width:100%;padding:11px 14px;border-radius:var(--radius);border:1px dashed var(--ln2);background:transparent;color:var(--tx3);font-size:14px;font-family:var(--f);cursor:pointer;text-align:left;min-height:44px}
+.url-toggle-btn:active{background:var(--bg3)}
+.url-input-wrap{position:relative}
+.url-input-wrap .finput{padding-right:40px}
+.url-clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:15px;font-family:var(--fm);padding:4px;line-height:1;min-width:28px;min-height:28px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 </head>
@@ -314,6 +332,13 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
   </div>
   <div class="field"><label>標籤（可多選）</label><div class="tag-selector" id="tagSelector"></div></div>
   <div class="field"><label>備註（選填）</label><textarea id="fNote" class="ftextarea" placeholder="朋友推薦、第3集看到一半、靈感來源…"></textarea></div>
+  <div class="field" id="urlField">
+    <button class="url-toggle-btn" id="urlToggleBtn" onclick="toggleUrlInput()">＋ 新增連結</button>
+    <div class="url-input-wrap" id="urlInputWrap" style="display:none">
+      <input id="fUrl" type="url" class="finput" placeholder="https://…" autocomplete="off" inputmode="url">
+      <button class="url-clear-btn" onclick="clearUrl()" title="移除連結">×</button>
+    </div>
+  </div>
   <div id="doneBox" style="display:none">
     <div class="done-box">
       <div class="done-box-label">完成 — 評分</div>
@@ -368,24 +393,30 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
   <div class="sh-handle"></div>
   <div class="sh-title">管理標籤</div>
   <div id="tagMgList"></div>
-  <button class="add-group-toggle" id="addGroupToggle" onclick="toggleAddGroup()">+ 新增群組</button>
-  <div class="add-group-panel" id="addGroupPanel">
-    <input id="newGroupName" type="text" class="finput" placeholder="群組名稱" autocomplete="off" style="min-height:44px;flex:1">
-    <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addGroup()">新增</button>
+
+  <div class="tag-section-divider">
+    <span class="tag-section-label">群組</span>
   </div>
-  <div class="field"><label>新增標籤</label>
-    <div class="add-tag-row" style="margin-bottom:8px">
+  <div class="add-group-row-inline">
+    <input id="newGroupName" type="text" class="finput" placeholder="新群組名稱" autocomplete="off" style="min-height:44px;flex:1">
+    <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addGroup()">新增群組</button>
+  </div>
+
+  <div class="add-tag-section">
+    <div class="tag-section-label" style="display:block;margin-bottom:12px">新增標籤</div>
+    <div class="add-tag-row" style="margin-bottom:10px">
       <input id="newTagName" type="text" class="finput" placeholder="標籤名稱" autocomplete="off" style="min-height:44px">
       <button class="btn-ok" style="flex:none;padding:11px 18px;min-height:44px" onclick="addTag()">新增</button>
     </div>
     <div class="field" style="margin-bottom:8px">
-      <label>加入群組</label>
-      <select id="newTagGroup" class="fselect" aria-label="加入群組">
+      <label>加入現有群組</label>
+      <select id="newTagGroup" class="fselect" aria-label="加入現有群組">
         <option value="">未分類</option>
       </select>
     </div>
     <div class="color-picks" id="colorPicks"></div>
   </div>
+
   <button class="btn-full" id="cancelTagMg">關閉</button>
 </div>
 
@@ -575,7 +606,10 @@ function render(){
   wrap.innerHTML=vis.map(it=>{
     const itTags=(it.tags||[]).map(id=>{const t=tagById(id);return t?`<span class="ctag col ${t.color}">${esc(t.name)}</span>`:''}).join('');
     const hasScore=it.status==='done'&&it.score!=null;
-    return`<div class="card s-${it.status}" onclick="openEdit('${it.id}')">
+    const hasNote=!!it.note;
+    const hasUrl=!!it.url;
+    const linkHtml=hasUrl?`<a class="act-link" href="${esc(it.url)}" target="_blank" rel="noopener" title="開啟連結" onclick="event.stopPropagation()">↗</a>`:'';
+    return`<div class="card s-${it.status}" data-id="${it.id}" onclick="toggleCard(this,'${it.id}')">
       <div class="card-top">
         <div class="card-main">
           <div class="card-title">${esc(it.title)}</div>
@@ -586,11 +620,17 @@ function render(){
           </div>
         </div>
         <div class="card-right">
-          <span class="del-btn" onclick="event.stopPropagation();del('${it.id}')">x</span>
+          <span class="del-btn" onclick="event.stopPropagation();del('${it.id}')">×</span>
         </div>
       </div>
-      ${it.note?`<div class="card-note">${esc(it.note)}</div>`:''}
+      ${hasNote?`<div class="card-note">${esc(it.note)}</div>`:''}
       ${hasScore?`<div class="card-review"><div class="score-row"><span class="score-num">${it.score}</span><span class="score-of">/ 10</span></div>${scoreBars(it.score)}</div>`:''}
+      <div class="card-actions">
+        <div class="act-left">
+          ${linkHtml}
+        </div>
+        <button class="act-edit" onclick="event.stopPropagation();openEdit('${it.id}')" title="編輯">✎</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -598,6 +638,11 @@ function render(){
 function setFType(v){fType=v;render()}
 function setFStat(v){fStatus=v;render()}
 function clearF(){fType='all';fStatus='all';render()}
+window.toggleCard=function(el,id){
+  const wasExpanded=el.classList.contains('expanded');
+  document.querySelectorAll('.card.expanded').forEach(c=>c.classList.remove('expanded'));
+  if(!wasExpanded)el.classList.add('expanded');
+};
 
 // filter row click delegation
 document.getElementById('typeFilterRow').addEventListener('click',e=>{
@@ -634,6 +679,16 @@ function prepareForm(it){
   document.getElementById('sheetTitle').textContent=it?'編輯':'新增';
   document.getElementById('fTitle').value=it?.title||'';
   document.getElementById('fNote').value=it?.note||'';
+  // url toggle
+  const urlVal=it?.url||'';
+  document.getElementById('fUrl').value=urlVal;
+  if(urlVal){
+    document.getElementById('urlInputWrap').style.display='block';
+    document.getElementById('urlToggleBtn').style.display='none';
+  } else {
+    document.getElementById('urlInputWrap').style.display='none';
+    document.getElementById('urlToggleBtn').style.display='';
+  }
   document.getElementById('fType').value=it?.type||db.types[0];
   document.getElementById('fStatus').value=it?.status||'want';
   selScore=it?.score??null;
@@ -643,6 +698,16 @@ function prepareForm(it){
   document.getElementById('doneBox').style.display=isDone?'block':'none';
   if(isDone)buildScore(selScore);
 }
+window.toggleUrlInput=()=>{
+  document.getElementById('urlInputWrap').style.display='block';
+  document.getElementById('urlToggleBtn').style.display='none';
+  setTimeout(()=>document.getElementById('fUrl').focus(),50);
+};
+window.clearUrl=()=>{
+  document.getElementById('fUrl').value='';
+  document.getElementById('urlInputWrap').style.display='none';
+  document.getElementById('urlToggleBtn').style.display='';
+};
 window.onStatusChange=()=>{
   const s=document.getElementById('fStatus').value;
   document.getElementById('doneBox').style.display=s==='done'?'block':'none';
@@ -655,7 +720,7 @@ document.getElementById('confirmAdd').addEventListener('click',()=>{
   const title=document.getElementById('fTitle').value.trim();
   if(!title){document.getElementById('fTitle').focus();return}
   const status=document.getElementById('fStatus').value;
-  const obj={title,type:document.getElementById('fType').value,status,note:document.getElementById('fNote').value.trim(),tags:[...selTagIds],score:status==='done'?selScore:null};
+  const obj={title,type:document.getElementById('fType').value,status,note:document.getElementById('fNote').value.trim(),url:document.getElementById('fUrl').value.trim(),tags:[...selTagIds],score:status==='done'?selScore:null};
   if(editId){const i=db.items.findIndex(x=>x.id===editId);if(i>-1)db.items[i]={...db.items[i],...obj}}
   else{obj.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);db.items.unshift(obj)}
   save();render();closeAll();
@@ -803,21 +868,12 @@ function buildColorPicks(){
   document.getElementById('colorPicks').innerHTML=TC_COLORS.map(c=>`<div class="cp${selNewTagColor===c.cls?' sel':''}" style="background:${c.bg}" title="${c.label}" onclick="selColor('${c.cls}')"></div>`).join('');
 }
 window.selColor=c=>{selNewTagColor=c;buildColorPicks()};
-window.toggleAddGroup=()=>{
-  const panel=document.getElementById('addGroupPanel');
-  const btn=document.getElementById('addGroupToggle');
-  const open=panel.classList.toggle('open');
-  btn.textContent=open?'− 新增群組':'+ 新增群組';
-  if(open) document.getElementById('newGroupName').focus();
-};
 window.addGroup=()=>{
   const name=document.getElementById('newGroupName').value.trim();
   if(!name)return;
   if(db.groups.includes(name)){alert('群組已存在');return}
   db.groups.push(name);
   document.getElementById('newGroupName').value='';
-  document.getElementById('addGroupPanel').classList.remove('open');
-  document.getElementById('addGroupToggle').textContent='+ 新增群組';
   save();renderTagMg();
   if(sheetStack.includes('addSheet'))buildTagSelector();
 };
