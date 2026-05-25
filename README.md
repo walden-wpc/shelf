@@ -7,23 +7,61 @@ Export and import via JSON for backup or device migration.
 
 **Live → [walden-wpc.github.io/shelf](https://walden-wpc.github.io/shelf)**
 
+---
+
 ## Features
 
-- Custom categories (books, films, series, podcasts, ideas...)
+**Tracking**
+- Custom categories — books, films, series, podcasts, ideas, or anything you add
 - Four statuses: 收藏 / 進行中 / 完成 / 封存
-- Colour-coded tags
-- Rating (1–10) for completed items
 - Notes on every item
-- Filter by category or status — sort by date, rating, or title
-- Search across titles, notes, and tags
+- Rating (1–10) for completed items
+
+**Organisation**
+- Colour-coded tags with group management
+- Filter by category or status
+- Sort by date added, rating, or title
+- Full-text search across titles, notes, and tags
+
+**Graph view**
+- Force-directed relationship graph linking items to their tags
+- Drag nodes, pinch to zoom, two-finger pan
+- Toggle type nodes and status opacity
+
+**App**
+- Works offline after first visit (PWA)
 - Light / dark / system theme
-- Offline-capable after first visit (PWA)
+- Installable on Android and iOS via "Add to Home Screen"
 - Single `.html` file — no build step, no dependencies
+
+---
 
 ## Data & Privacy
 
-All data is stored locally via `localStorage`.  
-Export as JSON to back up. Import on any device to restore.
+All data is stored locally in your browser via `localStorage`.
+Use **匯出 JSON** to back up. Use **匯入 JSON** on any device to restore.
+
+> Clearing browser site data will erase your shelf. Back up regularly.
+
+---
+
+## Self-hosting
+
+Download `index.html`, `manifest.json`, `sw.js`, and `icon.svg`.
+Deploy to any static host (GitHub Pages, Cloudflare Pages, Netlify).
+
+Update `manifest.json` and `sw.js` to point to your own path if not hosting at `/shelf/`.
+
+---
+
+## Stack
+
+- Vanilla HTML / CSS / JavaScript
+- [D3.js](https://d3js.org/) for the graph view
+- PWA (Web App Manifest + Service Worker)
+- No framework, no build tool, no dependencies beyond D3
+
+---
 
 ## License
 
