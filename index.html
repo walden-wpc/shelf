@@ -108,11 +108,12 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
 .search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:15px;font-family:var(--fm);padding:4px;line-height:1;display:none;min-width:28px;min-height:28px}
 
 /* two filter rows */
-.filter-row{display:flex;gap:5px;overflow-x:auto;padding-bottom:9px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filter-row{display:flex;gap:5px;padding-bottom:9px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overflow-x:auto}
 .filter-row::-webkit-scrollbar{display:none}
-.filter-row .fchip-fixed{flex-shrink:0}
 .fchip{flex-shrink:0;padding:5px 12px;border-radius:999px;border:1px solid var(--ln2);font-size:13px;font-family:var(--f);color:var(--tx2);background:transparent;cursor:pointer;white-space:nowrap;min-height:32px;transition:all .12s}
 .fchip.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.fchip.sticky-all{position:sticky;left:0;z-index:1;background:var(--bg);border-color:var(--ln2)}
+.fchip.sticky-all.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .sep{width:1px;background:var(--ln2);flex-shrink:0;margin:4px 0}
 
 .stats-strip{display:flex;align-items:center;flex-shrink:0;border-bottom:1px solid var(--ln);background:var(--bg2)}
@@ -267,7 +268,7 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
     </div>
     <div class="search-row">
       <div class="search-wrap">
-        <input type="search" id="searchInput" class="search-input" placeholder="搜尋標題、備註、標籤">
+        <input type="text" id="searchInput" class="search-input" placeholder="搜尋標題、備註、標籤">
         <button class="search-clear" id="searchClear">x</button>
       </div>
     </div>
@@ -285,9 +286,9 @@ h1{font-size:17px;font-weight:500;flex:1;letter-spacing:.02em}
     </select>
   </div>
   <div class="list-wrap" id="listWrap"></div>
-  <div class="graph-view" id="graphView" style="display:none;flex:1;overflow:hidden;padding:14px;flex-direction:column;gap:10px">
-    <svg id="graphSvg" style="width:100%;flex:1;background:var(--bg2);border-radius:var(--radius)"></svg>
-    <div id="graphLegend" style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;font-family:var(--fm);color:var(--tx2)"></div>
+  <div class="graph-view" id="graphView" style="display:none;flex:1;overflow:hidden;padding:0 14px 14px;flex-direction:column;gap:8px">
+    <svg id="graphSvg" style="width:100%;flex:1;background:var(--bg2);border-radius:var(--radius);touch-action:none"></svg>
+    <div id="graphLegend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:var(--fm);color:var(--tx2);align-items:center;padding:0 2px"></div>
     <div id="graphEmpty" style="display:none;align-items:center;justify-content:center;font-size:13px;color:var(--tx3);font-family:var(--fm)">尚無足夠資料</div>
   </div>
 </div>
@@ -538,7 +539,9 @@ function render(){
     if(fStatus!=='all'&&it.status!==fStatus)return false;
     if(q){
       const tagNames=(it.tags||[]).map(id=>tagById(id)?.name||'').join(' ').toLowerCase();
-      if(!it.title.toLowerCase().includes(q)&&!(it.note||'').toLowerCase().includes(q)&&!tagNames.includes(q))return false;
+      const haystack=[it.title,it.note||'',tagNames].join(' ').toLowerCase();
+      const tokens=q.trim().split(/\s+/).filter(Boolean);
+      if(tokens.length&&!tokens.every(tok=>haystack.includes(tok)))return false;
     }
     return true;
   });
@@ -556,15 +559,15 @@ function render(){
     `<div class="ss"><div class="ss-n">${db.items.length}</div><div class="ss-l">全部</div></div>`+
     ['want','doing','done','archived'].map(s=>`<div class="ss"><div class="ss-n">${cnt[s]||0}</div><div class="ss-l">${SL[s]}</div></div>`).join('');
 
-  // type filter row — 全部 fixed, rest scrollable
-  const typeChips=[['all','全部'],...db.types.map(t=>[t,t])];
+  // type filter row — 全部 sticky
   document.getElementById('typeFilterRow').innerHTML=
-    typeChips.map(([v,l])=>`<button class="fchip${fType===v?' on':''}" onclick="setFType('${v}')">${l}</button>`).join('');
+    `<button class="fchip sticky-all${fType==='all'?' on':''}" data-ftype="all">全部</button>`+
+    db.types.map(t=>`<button class="fchip${fType===t?' on':''}" data-ftype="${t.replace(/"/g,'&quot;')}">${t}</button>`).join('');
 
-  // status filter row
+  // status filter row — 全部 sticky
   document.getElementById('statusFilterRow').innerHTML=
-    [['all','全部'],...Object.entries(SL)].map(([v,l])=>`<button class="fchip${fStatus===v?' on':''}" onclick="setFStat('${v}')">${l}</button>`).join('')+
-    (fType!=='all'||fStatus!=='all'?`<span class="sep"></span><button class="fchip" onclick="clearF()">清除</button>`:'');
+    `<button class="fchip sticky-all${fStatus==='all'?' on':''}" data-fstat="all">全部</button>`+
+    Object.entries(SL).map(([v,l])=>`<button class="fchip${fStatus===v?' on':''}" data-fstat="${v}">${l}</button>`).join('');
 
   // list
   const wrap=document.getElementById('listWrap');
@@ -595,6 +598,22 @@ function render(){
 function setFType(v){fType=v;render()}
 function setFStat(v){fStatus=v;render()}
 function clearF(){fType='all';fStatus='all';render()}
+
+// filter row click delegation
+document.getElementById('typeFilterRow').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-ftype]');
+  if(!btn)return;
+  const v=btn.getAttribute('data-ftype');
+  fType=(fType===v&&v!=='all')?'all':v;
+  render();
+},{capture:true});
+document.getElementById('statusFilterRow').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-fstat]');
+  if(!btn)return;
+  const v=btn.getAttribute('data-fstat');
+  fStatus=(fStatus===v&&v!=='all')?'all':v;
+  render();
+},{capture:true});
 window.del=id=>{if(!confirm('確定刪除？'))return;db.items=db.items.filter(x=>x.id!==id);save();render()};
 
 /* ── Sheet system ── */
@@ -845,8 +864,9 @@ window.delType=t=>{
 document.getElementById('cancelTypeMg').addEventListener('click',closeTop);
 
 /* ── Graph toggle ── */
+/* ── Graph ── */
 let graphMode = false;
-document.getElementById('cancelGraph')?.addEventListener('click',closeTop);
+let showTypes = false;
 
 document.getElementById('viewToggle').addEventListener('click', () => {
   graphMode = !graphMode;
@@ -876,39 +896,8 @@ function renderGraph(){
   svg.innerHTML = '';
   const graphView = document.getElementById('graphView');
   const W = graphView.clientWidth - 28 || 340;
-  const H = Math.max(window.innerHeight * 0.55, 320);
+  const H = Math.max(window.innerHeight * 0.62, 360);
   svg.style.height = H + 'px';
-
-  const nodes = [], links = [];
-  const nodeMap = {};
-
-  db.types.forEach(t => {
-    const id = 'type:'+t;
-    nodeMap[id] = {id, label:t, kind:'type'};
-    nodes.push(nodeMap[id]);
-  });
-  db.tags.forEach(t => {
-    const id = 'tag:'+t.id;
-    nodeMap[id] = {id, label:t.name, kind:'tag', color:t.color};
-    nodes.push(nodeMap[id]);
-  });
-  db.items.forEach(it => {
-    const id = 'item:'+it.id;
-    nodeMap[id] = {id, label:it.title, kind:'item', status:it.status};
-    nodes.push(nodeMap[id]);
-    const tId = 'type:'+it.type;
-    if(nodeMap[tId]) links.push({source:tId, target:id});
-    (it.tags||[]).forEach(tid => {
-      const gId = 'tag:'+tid;
-      if(nodeMap[gId]) links.push({source:gId, target:id});
-    });
-  });
-
-  const emptyEl = document.getElementById('graphEmpty');
-  if(nodes.length < 2){
-    emptyEl.style.display = 'flex'; svg.style.display = 'none'; return;
-  }
-  emptyEl.style.display = 'none'; svg.style.display = '';
 
   const isDark = document.documentElement.getAttribute('data-theme')==='dark' ||
     (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme:dark)').matches);
@@ -916,60 +905,157 @@ function renderGraph(){
   const COL = {
     type: isDark?'#e8e8e2':'#111110',
     tag:  '#b89a5a',
-    item: isDark?'#484840':'#d0d0ca',
+    item: isDark?'#3a3a36':'#e0e0da',
     itemText: isDark?'#c0c0b8':'#484840',
-    link: isDark?'#2e2e2a':'#d4d4d0',
+    link: isDark?'#303030':'#d0d0ca',
+    typeLink: isDark?'#282826':'#e0e0dc',
   };
-  const TC_HEX = {tc0:'#dbb677',tc1:'#7aa882',tc2:'#7194c4',tc3:'#b9789b',tc4:'#b4785a',tc5:'#78a5b4',tc6:'#a0946c',tc7:'#9678b9'};
+  const TC_HEX = {
+    tc0:'#dbb677',tc1:'#7aa882',tc2:'#7194c4',tc3:'#b9789b',
+    tc4:'#b4785a',tc5:'#78a5b4',tc6:'#a0946c',tc7:'#9678b9',
+    tc8:'#dc6464',tc9:'#50b4a0',tc10:'#c8a0dc',tc11:'#f0b450',
+  };
 
-  const S = d3.select(svg).attr('viewBox',`0 0 ${W} ${H}`);
+  // build nodes & links
+  const nodes = [], links = [];
+  const nodeMap = {};
 
-  const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d=>d.id).distance(d=>d.source.kind==='type'||d.target.kind==='type'?80:55).strength(0.6))
-    .force('charge', d3.forceManyBody().strength(-180))
-    .force('center', d3.forceCenter(W/2, H/2))
-    .force('collision', d3.forceCollide().radius(d=>d.kind==='type'?28:d.kind==='tag'?22:16));
-
-  sim.stop();
-  for(let i=0;i<300;i++) sim.tick();
-  nodes.forEach(n=>{
-    const r=n.kind==='type'?28:n.kind==='tag'?22:16;
-    n.x=Math.max(r,Math.min(W-r,n.x));
-    n.y=Math.max(r,Math.min(H-r,n.y));
+  if(showTypes){
+    db.types.forEach(t => {
+      const id='type:'+t;
+      nodeMap[id]={id,label:t,kind:'type'};
+      nodes.push(nodeMap[id]);
+    });
+  }
+  db.tags.forEach(t => {
+    const id='tag:'+t.id;
+    nodeMap[id]={id,label:t.name,kind:'tag',color:t.color};
+    nodes.push(nodeMap[id]);
+  });
+  db.items.forEach(it => {
+    const id='item:'+it.id;
+    nodeMap[id]={id,label:it.title,kind:'item',status:it.status};
+    nodes.push(nodeMap[id]);
+    if(showTypes){
+      const tId='type:'+it.type;
+      if(nodeMap[tId]) links.push({source:tId,target:id,kind:'type'});
+    }
+    (it.tags||[]).forEach(tid => {
+      const gId='tag:'+tid;
+      if(nodeMap[gId]) links.push({source:gId,target:id,kind:'tag'});
+    });
   });
 
-  S.append('g').selectAll('line').data(links).enter().append('line')
-    .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
-    .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y)
-    .attr('stroke',COL.link).attr('stroke-width',1);
+  const emptyEl = document.getElementById('graphEmpty');
+  if(nodes.length < 2){
+    emptyEl.style.display='flex'; svg.style.display='none'; return;
+  }
+  emptyEl.style.display='none'; svg.style.display='';
 
-  const g = S.append('g').selectAll('g').data(nodes).enter().append('g');
-  g.each(function(d){
+  // D3 setup with zoom container
+  const S = d3.select(svg).attr('viewBox',`0 0 ${W} ${H}`);
+  const container = S.append('g');
+
+  // zoom: pinch=scale, two-finger pan
+  const zoomBehavior = d3.zoom()
+    .scaleExtent([0.2, 4])
+    .filter(e => {
+      // allow wheel zoom, allow touch with 2+ fingers, block single touch & mouse drag
+      if(e.type === 'wheel') return true;
+      if(e.type === 'touchstart') return e.touches.length >= 2;
+      if(e.type === 'touchmove') return e.touches.length >= 2;
+      if(e.type === 'touchend') return true;
+      return false;
+    })
+    .on('zoom', e => container.attr('transform', e.transform));
+  S.call(zoomBehavior).on('dblclick.zoom', null);
+
+  // force simulation — run async for smooth initial layout
+  const nodeR = d => d.kind==='type'?20:d.kind==='tag'?14:8;
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d=>d.id)
+      .distance(d=>d.kind==='type'?90:60)
+      .strength(0.5))
+    .force('charge', d3.forceManyBody().strength(d=>d.kind==='item'?-120:-200))
+    .force('center', d3.forceCenter(W/2, H/2))
+    .force('collision', d3.forceCollide().radius(d=>nodeR(d)+10).strength(0.9))
+    .alphaDecay(0.02);
+
+  // draw links
+  const linkSel = container.append('g').selectAll('line').data(links).enter().append('line')
+    .attr('stroke', d=>d.kind==='type'?COL.typeLink:COL.link)
+    .attr('stroke-width', d=>d.kind==='type'?0.5:1)
+    .attr('opacity', d=>d.kind==='type'?0.4:0.7);
+
+  // draw nodes
+  const nodeSel = container.append('g').selectAll('g').data(nodes).enter().append('g')
+    .attr('cursor','grab');
+
+  nodeSel.each(function(d){
     const el = d3.select(this);
+    const r = nodeR(d);
     if(d.kind==='type'){
-      el.append('circle').attr('r',14).attr('fill',COL.type).attr('cx',d.x).attr('cy',d.y);
-      el.append('text').attr('x',d.x).attr('y',d.y+4).attr('text-anchor','middle')
-        .attr('font-size','9px').attr('font-family','monospace')
-        .attr('fill',isDark?'#111':'#fff').text(d.label.length>4?d.label.slice(0,4):d.label);
+      el.append('circle').attr('r',r).attr('fill',COL.type).attr('opacity',0.9);
+      el.append('text').attr('text-anchor','middle').attr('dy','0.35em')
+        .attr('font-size','8px').attr('font-family','monospace')
+        .attr('fill',isDark?'#111':'#fff').attr('pointer-events','none')
+        .text(d.label.length>4?d.label.slice(0,4):d.label);
     } else if(d.kind==='tag'){
       const col=TC_HEX[d.color]||COL.tag;
-      el.append('circle').attr('r',10).attr('fill',col).attr('cx',d.x).attr('cy',d.y).attr('opacity',0.85);
-      el.append('text').attr('x',d.x).attr('y',d.y+16).attr('text-anchor','middle')
-        .attr('font-size','8px').attr('font-family','monospace').attr('fill',col)
-        .text(d.label.length>5?d.label.slice(0,5)+'…':d.label);
+      el.append('circle').attr('r',r).attr('fill',col).attr('opacity',0.85);
+      el.append('text').attr('text-anchor','middle').attr('dy',r+10)
+        .attr('font-size','8px').attr('font-family','monospace')
+        .attr('fill',col).attr('pointer-events','none')
+        .text(d.label.length>6?d.label.slice(0,6)+'…':d.label);
     } else {
-      el.append('circle').attr('r',5).attr('fill',COL.item).attr('cx',d.x).attr('cy',d.y)
-        .attr('stroke',isDark?'#484840':'#b8b8b0').attr('stroke-width',1);
-      el.append('text').attr('x',d.x).attr('y',d.y+13).attr('text-anchor','middle')
-        .attr('font-size','7px').attr('font-family','sans-serif').attr('fill',COL.itemText).attr('opacity',0.7)
-        .text(d.label.length>8?d.label.slice(0,8)+'…':d.label);
+      el.append('circle').attr('r',r).attr('fill',COL.item)
+        .attr('stroke',isDark?'#555':'#aaa').attr('stroke-width',1);
+      el.append('text').attr('text-anchor','middle').attr('dy',r+9)
+        .attr('font-size','7px').attr('font-family','sans-serif')
+        .attr('fill',COL.itemText).attr('opacity',0.8).attr('pointer-events','none')
+        .text(d.label.length>9?d.label.slice(0,9)+'…':d.label);
     }
   });
 
+  // drag: single finger/mouse moves node
+  const dragBehavior = d3.drag()
+    .filter(e => {
+      if(e.type==='touchstart') return e.touches.length===1;
+      return !e.button;
+    })
+    .on('start', (e,d) => {
+      if(!e.active) sim.alphaTarget(0.15).restart();
+      d.fx=d.x; d.fy=d.y;
+      d3.select(e.sourceEvent.target.closest('g')).attr('cursor','grabbing');
+    })
+    .on('drag', (e,d) => { d.fx=e.x; d.fy=e.y; })
+    .on('end', (e,d) => {
+      if(!e.active) sim.alphaTarget(0);
+      d.fx=null; d.fy=null;
+      d3.select(e.sourceEvent.target.closest('g')).attr('cursor','grab');
+    });
+  nodeSel.call(dragBehavior);
+
+  // tick
+  sim.on('tick', () => {
+    linkSel
+      .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+      .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    nodeSel.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+
+  // legend + type toggle
+  const toggleLabel = showTypes ? '隱藏分類' : '顯示分類';
   document.getElementById('graphLegend').innerHTML =
-    `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="${COL.type}"/></svg>分類</span>`+
-    `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="${COL.tag}"/></svg>標籤</span>`+
-    `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="${COL.item}" stroke="${isDark?'#484840':'#b8b8b0'}" stroke-width="1"/></svg>項目</span>`;
+    `<button id="typeToggleBtn" style="font-size:11px;font-family:var(--fm);color:var(--tx3);background:transparent;border:1px solid var(--ln2);border-radius:4px;padding:3px 9px;cursor:pointer">${toggleLabel}</button>`+
+    `<span style="display:flex;align-items:center;gap:4px"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="${COL.tag}"/></svg>標籤</span>`+
+    `<span style="display:flex;align-items:center;gap:4px"><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="${COL.item}" stroke="${isDark?'#555':'#aaa'}" stroke-width="1"/></svg>項目</span>`;
+
+  document.getElementById('typeToggleBtn').addEventListener('click',()=>{
+    showTypes=!showTypes;
+    renderGraph();
+  });
 }
 
 /* ── Boot ── */
