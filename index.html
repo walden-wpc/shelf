@@ -867,6 +867,7 @@ document.getElementById('cancelTypeMg').addEventListener('click',closeTop);
 /* ── Graph ── */
 let graphMode = false;
 let showTypes = false;
+let showOpacity = false;
 
 document.getElementById('viewToggle').addEventListener('click', () => {
   graphMode = !graphMode;
@@ -971,22 +972,23 @@ function renderGraph(){
   S.call(zoomBehavior).on('dblclick.zoom', null);
 
   // force simulation — run async for smooth initial layout
-  const nodeR = d => d.kind==='type'?20:d.kind==='tag'?14:8;
+  const nodeR = d => d.kind==='type'?18:d.kind==='tag'?16:8;
+  const STATUS_OPACITY = {want:0.45, doing:0.75, done:1.0, archived:0.2};
 
   const sim = d3.forceSimulation(nodes)
     .force('link', d3.forceLink(links).id(d=>d.id)
-      .distance(d=>d.kind==='type'?90:60)
+      .distance(d=>d.kind==='type'?90:65)
       .strength(0.5))
-    .force('charge', d3.forceManyBody().strength(d=>d.kind==='item'?-120:-200))
+    .force('charge', d3.forceManyBody().strength(d=>d.kind==='item'?-120:-220))
     .force('center', d3.forceCenter(W/2, H/2))
-    .force('collision', d3.forceCollide().radius(d=>nodeR(d)+10).strength(0.9))
+    .force('collision', d3.forceCollide().radius(d=>nodeR(d)+12).strength(0.9))
     .alphaDecay(0.02);
 
   // draw links
   const linkSel = container.append('g').selectAll('line').data(links).enter().append('line')
     .attr('stroke', d=>d.kind==='type'?COL.typeLink:COL.link)
     .attr('stroke-width', d=>d.kind==='type'?0.5:1)
-    .attr('opacity', d=>d.kind==='type'?0.4:0.7);
+    .attr('opacity', d=>d.kind==='type'?0.35:0.6);
 
   // draw nodes
   const nodeSel = container.append('g').selectAll('g').data(nodes).enter().append('g')
@@ -995,20 +997,31 @@ function renderGraph(){
   nodeSel.each(function(d){
     const el = d3.select(this);
     const r = nodeR(d);
+    const itemOpacity = showOpacity ? (STATUS_OPACITY[d.status]||1) : 1;
+
     if(d.kind==='type'){
-      el.append('circle').attr('r',r).attr('fill',COL.type).attr('opacity',0.9);
+      // type: solid circle, label inside
+      el.append('circle').attr('r',r)
+        .attr('fill',COL.type).attr('opacity',0.88);
       el.append('text').attr('text-anchor','middle').attr('dy','0.35em')
-        .attr('font-size','8px').attr('font-family','monospace')
+        .attr('font-size','9px').attr('font-family','monospace')
         .attr('fill',isDark?'#111':'#fff').attr('pointer-events','none')
         .text(d.label.length>4?d.label.slice(0,4):d.label);
+
     } else if(d.kind==='tag'){
+      // tag: hollow circle, label centred on top, can overflow
       const col=TC_HEX[d.color]||COL.tag;
-      el.append('circle').attr('r',r).attr('fill',col).attr('opacity',0.85);
-      el.append('text').attr('text-anchor','middle').attr('dy',r+10)
-        .attr('font-size','8px').attr('font-family','monospace')
+      el.append('circle').attr('r',r)
+        .attr('fill','none')
+        .attr('stroke',col).attr('stroke-width',1.5).attr('opacity',0.9);
+      el.append('text').attr('text-anchor','middle').attr('dy','0.35em')
+        .attr('font-size','11px').attr('font-family','sans-serif').attr('font-weight','500')
         .attr('fill',col).attr('pointer-events','none')
-        .text(d.label.length>6?d.label.slice(0,6)+'…':d.label);
+        .text(d.label);
+
     } else {
+      // item: small solid circle, label below, opacity by status
+      el.attr('opacity', itemOpacity);
       el.append('circle').attr('r',r).attr('fill',COL.item)
         .attr('stroke',isDark?'#555':'#aaa').attr('stroke-width',1);
       el.append('text').attr('text-anchor','middle').attr('dy',r+9)
@@ -1018,7 +1031,7 @@ function renderGraph(){
     }
   });
 
-  // drag: single finger/mouse moves node
+  // drag
   const dragBehavior = d3.drag()
     .filter(e => {
       if(e.type==='touchstart') return e.touches.length===1;
@@ -1045,16 +1058,28 @@ function renderGraph(){
     nodeSel.attr('transform',d=>`translate(${d.x},${d.y})`);
   });
 
-  // legend + type toggle
-  const toggleLabel = showTypes ? '隱藏分類' : '顯示分類';
+  // legend + toggles
+  const btnStyle = 'font-size:11px;font-family:var(--fm);color:var(--tx3);background:transparent;border:1px solid var(--ln2);border-radius:4px;padding:3px 9px;cursor:pointer';
+  const tagSample = `<svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="none" stroke="${COL.tag}" stroke-width="1.5"/></svg>`;
+  const itemSample = `<svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="${COL.item}" stroke="${isDark?'#555':'#aaa'}" stroke-width="1"/></svg>`;
   document.getElementById('graphLegend').innerHTML =
-    `<button id="typeToggleBtn" style="font-size:11px;font-family:var(--fm);color:var(--tx3);background:transparent;border:1px solid var(--ln2);border-radius:4px;padding:3px 9px;cursor:pointer">${toggleLabel}</button>`+
-    `<span style="display:flex;align-items:center;gap:4px"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="${COL.tag}"/></svg>標籤</span>`+
-    `<span style="display:flex;align-items:center;gap:4px"><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="${COL.item}" stroke="${isDark?'#555':'#aaa'}" stroke-width="1"/></svg>項目</span>`;
+    `<button id="typeToggleBtn" style="${btnStyle}">${showTypes?'隱藏分類':'顯示分類'}</button>`+
+    `<button id="opacityToggleBtn" style="${btnStyle}">${showOpacity?'關閉狀態透明':'顯示狀態透明'}</button>`+
+    `<span style="display:flex;align-items:center;gap:4px">${tagSample}標籤</span>`+
+    `<span style="display:flex;align-items:center;gap:4px">${itemSample}項目</span>`;
 
   document.getElementById('typeToggleBtn').addEventListener('click',()=>{
-    showTypes=!showTypes;
-    renderGraph();
+    showTypes=!showTypes; renderGraph();
+  });
+  document.getElementById('opacityToggleBtn').addEventListener('click',()=>{
+    showOpacity=!showOpacity;
+    document.getElementById('opacityToggleBtn').textContent=showOpacity?'關閉狀態透明':'顯示狀態透明';
+    const STATUS_OP = {want:0.45,doing:0.75,done:1.0,archived:0.2};
+    nodeSel.each(function(d){
+      if(d.kind==='item'){
+        d3.select(this).attr('opacity', showOpacity?(STATUS_OP[d.status]||1):1);
+      }
+    });
   });
 }
 
