@@ -156,6 +156,12 @@ h1{font-size:1em;font-weight:500;flex:1;letter-spacing:.02em}
 .score-bar{display:flex;gap:3px}
 .sp{height:3px;flex:1;background:var(--ln);border-radius:2px}
 .sp.on{background:var(--tx)}
+/* mood bars — red / yellow / green */
+.mood-bar{display:flex;gap:3px}
+.mp{height:3px;flex:1;background:var(--ln);border-radius:2px}
+.mp.on.low{background:#e05555}
+.mp.on.mid{background:#d4a017}
+.mp.on.high{background:#4a9e6b}
 
 .empty{text-align:center;padding:72px 20px;color:var(--tx3);font-size:14px;line-height:2;letter-spacing:.03em}
 
@@ -256,6 +262,22 @@ html:not([data-fs]){font-size:17px}
 .card-note{font-size:.8125em;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--ln);line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:4.8em;overflow:hidden}
 .card.expanded .card-note{max-height:none}
 .card-review-text{font-style:italic}
+
+/* ── Images ── */
+.card-images{display:none;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.card-images::-webkit-scrollbar{display:none}
+.card.expanded .card-images{display:flex}
+.card-img{width:140px;height:100px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;scroll-snap-align:start;image-rendering:pixelated;filter:contrast(1.1);cursor:pointer}
+.img-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.img-thumb-wrap{position:relative;width:72px;height:72px}
+.img-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);image-rendering:pixelated;filter:contrast(1.1)}
+.img-thumb-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--tx);color:var(--bg);font-size:11px;font-family:var(--fm);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.img-add-btn{width:72px;height:72px;border-radius:var(--radius-sm);border:1px dashed var(--ln2);background:transparent;color:var(--tx3);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.img-add-btn:active{background:var(--bg3)}
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;image-rendering:pixelated;border-radius:4px}
+.lightbox-close{position:fixed;top:16px;right:16px;width:36px;height:36px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .finput,.ftextarea,.fselect{width:100%;background:var(--bg2);border:1px solid var(--ln);border-radius:var(--radius);padding:11px 13px;font-size:.9375em;font-family:var(--f);color:var(--tx);outline:none;-webkit-appearance:none;appearance:none;min-height:44px}
 .card{background:var(--bg);border:1px solid var(--ln);border-radius:var(--radius);padding:13px 13px 11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
 .card.expanded{border-color:var(--ln3)}
@@ -337,6 +359,10 @@ html:not([data-fs]){font-size:17px}
 
 <button class="fab" id="fab" aria-label="新增">+</button>
 <div class="overlay" id="overlay"></div>
+<div class="lightbox" id="lightbox" style="display:none" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
 
 <!-- Add/Edit sheet -->
 <div class="sheet" id="addSheet">
@@ -344,7 +370,7 @@ html:not([data-fs]){font-size:17px}
   <div class="sh-title" id="sheetTitle">新增</div>
   <div class="field"><label>標題</label><input id="fTitle" type="text" class="finput" placeholder="書名、片名或靈感標題" autocomplete="off"></div>
   <div class="row2">
-    <div class="field"><label>分類</label><select id="fType" class="fselect" aria-label="分類"></select></div>
+    <div class="field"><label>分類</label><select id="fType" class="fselect" aria-label="分類" onchange="updateDoneBoxLabel()"></select></div>
     <div class="field"><label>狀態</label>
       <select id="fStatus" class="fselect" aria-label="狀態" onchange="onStatusChange()">
         <option value="want">收藏</option>
@@ -361,6 +387,10 @@ html:not([data-fs]){font-size:17px}
       <button class="textarea-expand-btn" id="noteExpandBtn" onclick="toggleNoteExpand()" title="展開備註">⤢</button>
     </div>
   </div>
+  <div class="field"><label>圖片（選填）</label>
+    <div class="img-list" id="imgList"></div>
+    <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none" onchange="handleImgFiles(this.files)">
+  </div>
   <div class="field" id="urlField">
     <button class="url-toggle-btn" id="urlToggleBtn" onclick="toggleUrlInput()">＋ 新增連結</button>
     <div class="url-input-wrap" id="urlInputWrap" style="display:none">
@@ -370,7 +400,7 @@ html:not([data-fs]){font-size:17px}
   </div>
   <div id="doneBox" style="display:none">
     <div class="done-box">
-      <div class="done-box-label">完成 — 評分</div>
+      <div class="done-box-label" id="doneBoxLabel">完成 — 評分</div>
       <div class="field" style="margin-bottom:0"><div class="score-picker" id="scorePicker"></div></div>
     </div>
     <div class="field"><label>評論（選填）</label>
@@ -496,7 +526,11 @@ const TC_COLORS=[
   {cls:'tc8',bg:'#dc6464',label:'紅'},{cls:'tc9',bg:'#50b4a0',label:'薄荷'},
   {cls:'tc10',bg:'#c8a0dc',label:'淡紫'},{cls:'tc11',bg:'#f0b450',label:'琥珀'},
 ];
-const DEFAULT_TYPES=['書','電影','影集','靈感','Podcast','其他'];
+const DEFAULT_TYPES=['書','電影','影集','靈感','Podcast','日記','其他'];
+const TYPE_CONFIG={
+  '日記':{scoreLabel:'心情',moodColor:true}
+};
+function typeConf(type){return TYPE_CONFIG[type]||{}}
 
 /* ── DB ── */
 function loadDB(){try{return JSON.parse(localStorage.getItem('ml5')||'null')}catch{return null}}
@@ -508,6 +542,13 @@ function initDB(){
 }
 let db=loadDB()||initDB();
 if(!db.types)db.types=[...DEFAULT_TYPES];
+// migrate: inject any new default types not yet in db
+DEFAULT_TYPES.forEach((t,i)=>{
+  if(!db.types.includes(t)){
+    const insertAt=Math.min(i,db.types.length);
+    db.types.splice(insertAt,0,t);
+  }
+});
 if(!db.tags)db.tags=[];
 if(!db.groups)db.groups=[];
 // migrate old status values
@@ -574,6 +615,16 @@ function scoreBars(n){
   let h='<div class="score-bar">';
   for(let i=1;i<=10;i++)h+=`<div class="sp${i<=n?' on':''}"></div>`;
   return h+'</div>';
+}
+function moodBars(n){
+  if(n==null)return'';
+  const zone=n<=3?'low':n<=7?'mid':'high';
+  let h='<div class="mood-bar">';
+  for(let i=1;i<=10;i++)h+=`<div class="mp${i<=n?' on '+zone:''}"></div>`;
+  return h+'</div>';
+}
+function isEdittingDiary(){
+  return !!typeConf(document.getElementById('fType')?.value).scoreLabel;
 }
 
 /* ── Filter/Sort state ── */
@@ -668,8 +719,17 @@ function render(){
   wrap.innerHTML=vis.map(it=>{
     const itTags=(it.tags||[]).map(id=>{const t=tagById(id);return t?`<span class="ctag col ${t.color}">${esc(t.name)}</span>`:''}).join('');
     const hasScore=it.status==='done'&&it.score!=null;
+    const conf=typeConf(it.type);
+    const scoreBlock=hasScore
+      ?conf.moodColor
+        ?`<div class="card-review"><div class="score-row"><span class="score-num">${it.score}</span><span class="score-of" style="color:${it.score<=3?'#e05555':it.score<=7?'#d4a017':'#4a9e6b'}">${conf.scoreLabel||'心情'}</span></div>${moodBars(it.score)}</div>`
+        :`<div class="card-review"><div class="score-row"><span class="score-num">${it.score}</span><span class="score-of">/ 10</span></div>${scoreBars(it.score)}</div>`
+      :'';
     const hasNote=!!it.note;
     const hasUrl=!!it.url;
+    const imgs=it.images||[];
+    const imgHtml=imgs.length===0?'':
+      `<div class="card-images" data-id="${it.id}">${imgs.map((s,i)=>`<img class="card-img" src="${s}" alt="" data-idx="${i}" onclick="event.stopPropagation();openLightboxById('${it.id}',${i})">`).join('')}</div>`;
     const linkHtml=hasUrl?`<a class="act-link" href="${esc(it.url)}" target="_blank" rel="noopener" title="開啟連結" onclick="event.stopPropagation()">↗</a>`:'';
     return`<div class="card s-${it.status}" data-id="${it.id}" onclick="toggleCard(this,'${it.id}')">
       <div class="card-top">
@@ -687,7 +747,8 @@ function render(){
       </div>
       ${hasNote?`<div class="card-note">${esc(it.note)}</div>`:''}
       ${it.review?`<div class="card-note card-review-text">${esc(it.review)}</div>`:''}
-      ${hasScore?`<div class="card-review"><div class="score-row"><span class="score-num">${it.score}</span><span class="score-of">/ 10</span></div>${scoreBars(it.score)}</div>`:''}
+      ${imgHtml}
+      ${scoreBlock}
       <div class="card-actions">
         <div class="act-left">
           ${linkHtml}
@@ -747,6 +808,8 @@ function prepareForm(it){
   document.getElementById('fReview').value=it?.review||'';
   document.getElementById('fReview').style.height='';
   document.getElementById('reviewExpandBtn').textContent='⤢';
+  pendingImages=[...(it?.images||[])];
+  renderImgList();
   // url toggle
   const urlVal=it?.url||'';
   document.getElementById('fUrl').value=urlVal;
@@ -764,7 +827,7 @@ function prepareForm(it){
   buildTagSelector();
   const isDone=(it?.status)==='done';
   document.getElementById('doneBox').style.display=isDone?'block':'none';
-  if(isDone)buildScore(selScore);
+  if(isDone){updateDoneBoxLabel();buildScore(selScore);}
 }
 window.toggleUrlInput=()=>{
   document.getElementById('urlInputWrap').style.display='block';
@@ -790,10 +853,110 @@ window.toggleReviewExpand=()=>{
   ta.style.height=expanded?'':'240px';
   btn.textContent=expanded?'⤢':'⤡';
 };
+function updateDoneBoxLabel(){
+  const conf=typeConf(document.getElementById('fType')?.value);
+  const lbl=document.getElementById('doneBoxLabel');
+  if(lbl)lbl.textContent=conf.scoreLabel?`完成 — ${conf.scoreLabel}`:'完成 — 評分';
+}
 window.onStatusChange=()=>{
   const s=document.getElementById('fStatus').value;
   document.getElementById('doneBox').style.display=s==='done'?'block':'none';
-  if(s==='done')buildScore(selScore);
+  if(s==='done'){updateDoneBoxLabel();buildScore(selScore);}
+};
+
+/* ── Image / Dither ── */
+let pendingImages=[];
+
+function floydSteinberg(imageData,w,h){
+  const d=imageData.data;
+  // convert to greyscale in-place
+  for(let i=0;i<d.length;i+=4){
+    const grey=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+    d[i]=d[i+1]=d[i+2]=grey;
+  }
+  // dither
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const idx=(y*w+x)*4;
+      const old=d[idx];
+      const nw=old<128?0:255;
+      const err=old-nw;
+      d[idx]=d[idx+1]=d[idx+2]=nw;
+      if(x+1<w){d[idx+4]+=err*7/16;d[idx+5]+=err*7/16;d[idx+6]+=err*7/16;}
+      if(y+1<h){
+        if(x>0){const j=((y+1)*w+(x-1))*4;d[j]+=err*3/16;d[j+1]+=err*3/16;d[j+2]+=err*3/16;}
+        const j2=((y+1)*w+x)*4;d[j2]+=err*5/16;d[j2+1]+=err*5/16;d[j2+2]+=err*5/16;
+        if(x+1<w){const j3=((y+1)*w+(x+1))*4;d[j3]+=err*1/16;d[j3+1]+=err*1/16;d[j3+2]+=err*1/16;}
+      }
+    }
+  }
+  return imageData;
+}
+
+function processImageFile(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const MAX=600;
+      let w=img.naturalWidth,h=img.naturalHeight;
+      if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      else if(h>w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      else if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      const c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const id=ctx.getImageData(0,0,w,h);
+      floydSteinberg(id,w,h);
+      ctx.putImageData(id,0,0);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/webp',0.6));
+    };
+    img.src=url;
+  });
+}
+
+window.handleImgFiles=async(files)=>{
+  for(const f of Array.from(files)){
+    if(!f.type.startsWith('image/'))continue;
+    const data=await processImageFile(f);
+    pendingImages.push(data);
+  }
+  document.getElementById('imgFileInput').value='';
+  renderImgList();
+};
+
+function renderImgList(){
+  const el=document.getElementById('imgList');
+  if(!el)return;
+  el.innerHTML=pendingImages.map((s,i)=>
+    `<div class="img-thumb-wrap">
+      <img class="img-thumb" src="${s}" alt="">
+      <button class="img-thumb-del" onclick="removeImg(${i})">×</button>
+    </div>`
+  ).join('')+
+  `<button class="img-add-btn" onclick="document.getElementById('imgFileInput').click()" title="新增圖片">＋</button>`;
+}
+
+window.removeImg=i=>{
+  pendingImages.splice(i,1);
+  renderImgList();
+};
+
+window.openLightbox=(imgs,idx)=>{
+  document.getElementById('lightboxImg').src=imgs[idx];
+  document.getElementById('lightbox').style.display='flex';
+};
+window.openLightboxById=(id,idx)=>{
+  const it=db.items.find(x=>x.id===id);
+  if(!it||!it.images||!it.images[idx])return;
+  document.getElementById('lightboxImg').src=it.images[idx];
+  document.getElementById('lightbox').style.display='flex';
+};
+window.closeLightbox=()=>{
+  document.getElementById('lightbox').style.display='none';
+  document.getElementById('lightboxImg').src='';
 };
 document.getElementById('fab').addEventListener('click',()=>{editId=null;prepareForm(null);openSheet('addSheet');setTimeout(()=>document.getElementById('fTitle').focus(),280)});
 window.openEdit=id=>{editId=id;prepareForm(db.items.find(x=>x.id===id));openSheet('addSheet')};
@@ -802,7 +965,7 @@ document.getElementById('confirmAdd').addEventListener('click',()=>{
   const title=document.getElementById('fTitle').value.trim();
   if(!title){document.getElementById('fTitle').focus();return}
   const status=document.getElementById('fStatus').value;
-  const obj={title,type:document.getElementById('fType').value,status,note:document.getElementById('fNote').value.trim(),review:status==='done'?document.getElementById('fReview').value.trim():'',url:document.getElementById('fUrl').value.trim(),tags:[...selTagIds],score:status==='done'?selScore:null};
+  const obj={title,type:document.getElementById('fType').value,status,note:document.getElementById('fNote').value.trim(),review:status==='done'?document.getElementById('fReview').value.trim():'',url:document.getElementById('fUrl').value.trim(),tags:[...selTagIds],score:status==='done'?selScore:null,images:[...pendingImages]};
   if(editId){const i=db.items.findIndex(x=>x.id===editId);if(i>-1)db.items[i]={...db.items[i],...obj}}
   else{obj.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);db.items.unshift(obj)}
   save();render();closeAll();
