@@ -253,8 +253,9 @@ html[data-fs="5"]{font-size:21px !important}
 html:not([data-fs]){font-size:17px}
 /* em-based reading text */
 .card-title{font-size:.9375em;font-weight:500;color:var(--tx);line-height:1.4;word-break:break-word}
-.card-note{font-size:.8125em;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--ln);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.card.expanded .card-note{display:block}
+.card-note{font-size:.8125em;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--ln);line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:4.8em;overflow:hidden}
+.card.expanded .card-note{max-height:none}
+.card-review-text{font-style:italic}
 .finput,.ftextarea,.fselect{width:100%;background:var(--bg2);border:1px solid var(--ln);border-radius:var(--radius);padding:11px 13px;font-size:.9375em;font-family:var(--f);color:var(--tx);outline:none;-webkit-appearance:none;appearance:none;min-height:44px}
 .card{background:var(--bg);border:1px solid var(--ln);border-radius:var(--radius);padding:13px 13px 11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
 .card.expanded{border-color:var(--ln3)}
@@ -685,7 +686,7 @@ function render(){
         </div>
       </div>
       ${hasNote?`<div class="card-note">${esc(it.note)}</div>`:''}
-      ${it.review?`<div class="card-note" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--ln);font-style:italic">${esc(it.review)}</div>`:''}
+      ${it.review?`<div class="card-note card-review-text">${esc(it.review)}</div>`:''}
       ${hasScore?`<div class="card-review"><div class="score-row"><span class="score-num">${it.score}</span><span class="score-of">/ 10</span></div>${scoreBars(it.score)}</div>`:''}
       <div class="card-actions">
         <div class="act-left">
