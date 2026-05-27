@@ -114,11 +114,11 @@ h1{font-size:1em;font-weight:500;flex:1;letter-spacing:.02em}
 .fchip.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .fchip.sticky-all{position:sticky;left:0;z-index:1;background:var(--bg);border-color:var(--ln2)}
 .fchip.sticky-all.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
-/* status bar — inverted default, dashed border selected */
-.fchip.stat{background:var(--bg3);color:var(--tx2);border-color:var(--ln2)}
-.fchip.stat.on{background:transparent;color:var(--tx);border:2px dashed var(--tx)}
-.fchip.stat.sticky-all{background:var(--bg3)}
-.fchip.stat.sticky-all.on{background:transparent;color:var(--tx);border:2px dashed var(--tx)}
+/* status bar — inverted default, rounded rect, dashed border selected */
+.fchip.stat{background:var(--bg3);color:var(--tx2);border-color:var(--ln2);border-radius:6px}
+.fchip.stat.on{background:transparent;color:var(--tx);border:2px dashed var(--tx);border-radius:6px}
+.fchip.stat.sticky-all{background:var(--bg3);border-radius:6px}
+.fchip.stat.sticky-all.on{background:transparent;color:var(--tx);border:2px dashed var(--tx);border-radius:6px}
 .sep{width:1px;background:var(--ln2);flex-shrink:0;margin:4px 0}
 
 .stats-strip{display:flex;align-items:center;flex-shrink:0;border-bottom:1px solid var(--ln);background:var(--bg2)}
@@ -284,10 +284,13 @@ html:not([data-fs]){font-size:17px}
 .url-input-wrap .finput{padding-right:40px}
 .url-clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:15px;font-family:var(--fm);padding:4px;line-height:1;min-width:28px;min-height:28px}
 .note-textarea{background:var(--bg3);border-color:var(--ln2)}
+.textarea-wrap{position:relative}
+.textarea-expand-btn{position:absolute;right:8px;bottom:8px;background:var(--bg2);border:1px solid var(--ln);border-radius:4px;color:var(--tx3);font-size:11px;cursor:pointer;padding:2px 5px;line-height:1.4;min-width:24px;min-height:22px;display:flex;align-items:center;justify-content:center}
+.textarea-expand-btn:active{background:var(--bg3)}
 .tm-name{cursor:text;border-radius:3px;padding:1px 3px;margin-left:-3px}
 .tm-name:hover{background:var(--bg3)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
 </head>
 <body>
 <div id="app">
@@ -321,12 +324,14 @@ html:not([data-fs]){font-size:17px}
       <option value="title">標題</option>
     </select>
   </div>
+  <main>
   <div class="list-wrap" id="listWrap"></div>
   <div class="graph-view" id="graphView" style="display:none;flex:1;overflow:hidden;padding:0 14px 14px;flex-direction:column;gap:8px">
     <svg id="graphSvg" style="width:100%;flex:1;background:var(--bg2);border-radius:var(--radius);touch-action:none"></svg>
     <div id="graphLegend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:var(--fm);color:var(--tx2);align-items:center;padding:0 2px"></div>
     <div id="graphEmpty" style="display:none;align-items:center;justify-content:center;font-size:13px;color:var(--tx3);font-family:var(--fm)">尚無足夠資料</div>
   </div>
+  </main>
 </div>
 
 <button class="fab" id="fab" aria-label="新增">+</button>
@@ -349,7 +354,12 @@ html:not([data-fs]){font-size:17px}
     </div>
   </div>
   <div class="field"><label>標籤（可多選）</label><div class="tag-selector" id="tagSelector"></div></div>
-  <div class="field"><label>備註（選填）</label><textarea id="fNote" class="ftextarea note-textarea" placeholder="朋友推薦、第3集看到一半、靈感來源…"></textarea></div>
+  <div class="field"><label>備註（選填）</label>
+    <div class="textarea-wrap">
+      <textarea id="fNote" class="ftextarea note-textarea" placeholder="朋友推薦、第3集看到一半、靈感來源…"></textarea>
+      <button class="textarea-expand-btn" id="noteExpandBtn" onclick="toggleNoteExpand()" title="展開備註">⤢</button>
+    </div>
+  </div>
   <div class="field" id="urlField">
     <button class="url-toggle-btn" id="urlToggleBtn" onclick="toggleUrlInput()">＋ 新增連結</button>
     <div class="url-input-wrap" id="urlInputWrap" style="display:none">
@@ -361,6 +371,12 @@ html:not([data-fs]){font-size:17px}
     <div class="done-box">
       <div class="done-box-label">完成 — 評分</div>
       <div class="field" style="margin-bottom:0"><div class="score-picker" id="scorePicker"></div></div>
+    </div>
+    <div class="field"><label>評論（選填）</label>
+      <div class="textarea-wrap">
+        <textarea id="fReview" class="ftextarea note-textarea" placeholder="讀後感、觀後感、心得啟發…"></textarea>
+        <button class="textarea-expand-btn" id="reviewExpandBtn" onclick="toggleReviewExpand()" title="展開評論">⤢</button>
+      </div>
     </div>
   </div>
   <div class="sh-btns">
@@ -384,11 +400,11 @@ html:not([data-fs]){font-size:17px}
       字級大小
       <div class="menu-item-right">
         <div class="fs-btns" id="fsBtns">
-          <button class="fs-btn" data-fs="1" onclick="setFs(1)">小</button>
-          <button class="fs-btn" data-fs="2" onclick="setFs(2)"></button>
-          <button class="fs-btn active" data-fs="3" onclick="setFs(3)">標</button>
-          <button class="fs-btn" data-fs="4" onclick="setFs(4)"></button>
-          <button class="fs-btn" data-fs="5" onclick="setFs(5)">大</button>
+          <button class="fs-btn" data-fs="1" onclick="setFs(1)" aria-label="字級最小">小</button>
+          <button class="fs-btn" data-fs="2" onclick="setFs(2)" aria-label="字級較小">–</button>
+          <button class="fs-btn active" data-fs="3" onclick="setFs(3)" aria-label="字級標準">標</button>
+          <button class="fs-btn" data-fs="4" onclick="setFs(4)" aria-label="字級較大">+</button>
+          <button class="fs-btn" data-fs="5" onclick="setFs(5)" aria-label="字級最大">大</button>
         </div>
       </div>
     </div>
@@ -669,6 +685,7 @@ function render(){
         </div>
       </div>
       ${hasNote?`<div class="card-note">${esc(it.note)}</div>`:''}
+      ${it.review?`<div class="card-note" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--ln);font-style:italic">${esc(it.review)}</div>`:''}
       ${hasScore?`<div class="card-review"><div class="score-row"><span class="score-num">${it.score}</span><span class="score-of">/ 10</span></div>${scoreBars(it.score)}</div>`:''}
       <div class="card-actions">
         <div class="act-left">
@@ -724,6 +741,11 @@ function prepareForm(it){
   document.getElementById('sheetTitle').textContent=it?'編輯':'新增';
   document.getElementById('fTitle').value=it?.title||'';
   document.getElementById('fNote').value=it?.note||'';
+  document.getElementById('fNote').style.height='';
+  document.getElementById('noteExpandBtn').textContent='⤢';
+  document.getElementById('fReview').value=it?.review||'';
+  document.getElementById('fReview').style.height='';
+  document.getElementById('reviewExpandBtn').textContent='⤢';
   // url toggle
   const urlVal=it?.url||'';
   document.getElementById('fUrl').value=urlVal;
@@ -753,6 +775,20 @@ window.clearUrl=()=>{
   document.getElementById('urlInputWrap').style.display='none';
   document.getElementById('urlToggleBtn').style.display='';
 };
+window.toggleNoteExpand=()=>{
+  const ta=document.getElementById('fNote');
+  const btn=document.getElementById('noteExpandBtn');
+  const expanded=ta.style.height==='240px';
+  ta.style.height=expanded?'':'240px';
+  btn.textContent=expanded?'⤢':'⤡';
+};
+window.toggleReviewExpand=()=>{
+  const ta=document.getElementById('fReview');
+  const btn=document.getElementById('reviewExpandBtn');
+  const expanded=ta.style.height==='240px';
+  ta.style.height=expanded?'':'240px';
+  btn.textContent=expanded?'⤢':'⤡';
+};
 window.onStatusChange=()=>{
   const s=document.getElementById('fStatus').value;
   document.getElementById('doneBox').style.display=s==='done'?'block':'none';
@@ -765,7 +801,7 @@ document.getElementById('confirmAdd').addEventListener('click',()=>{
   const title=document.getElementById('fTitle').value.trim();
   if(!title){document.getElementById('fTitle').focus();return}
   const status=document.getElementById('fStatus').value;
-  const obj={title,type:document.getElementById('fType').value,status,note:document.getElementById('fNote').value.trim(),url:document.getElementById('fUrl').value.trim(),tags:[...selTagIds],score:status==='done'?selScore:null};
+  const obj={title,type:document.getElementById('fType').value,status,note:document.getElementById('fNote').value.trim(),review:status==='done'?document.getElementById('fReview').value.trim():'',url:document.getElementById('fUrl').value.trim(),tags:[...selTagIds],score:status==='done'?selScore:null};
   if(editId){const i=db.items.findIndex(x=>x.id===editId);if(i>-1)db.items[i]={...db.items[i],...obj}}
   else{obj.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);db.items.unshift(obj)}
   save();render();closeAll();
