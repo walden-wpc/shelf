@@ -267,17 +267,24 @@ html:not([data-fs]){font-size:17px}
 .card-images{display:none;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
 .card-images::-webkit-scrollbar{display:none}
 .card.expanded .card-images{display:flex}
-.card-img{width:140px;height:100px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;scroll-snap-align:start;image-rendering:pixelated;filter:contrast(1.1);cursor:pointer}
+.card-img{width:140px;height:100px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;scroll-snap-align:start;cursor:pointer}
 .img-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .img-thumb-wrap{position:relative;width:72px;height:72px}
-.img-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);image-rendering:pixelated;filter:contrast(1.1)}
+.img-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm)}
 .img-thumb-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--tx);color:var(--bg);font-size:11px;font-family:var(--fm);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 .img-add-btn{width:72px;height:72px;border-radius:var(--radius-sm);border:1px dashed var(--ln2);background:transparent;color:var(--tx3);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .img-add-btn:active{background:var(--bg3)}
 /* lightbox */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
-.lightbox img{max-width:100%;max-height:100%;object-fit:contain;image-rendering:pixelated;border-radius:4px}
-.lightbox-close{position:fixed;top:16px;right:16px;width:36px;height:36px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
+.lightbox-close{position:fixed;top:16px;right:16px;width:36px;height:36px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.lightbox-arrow{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:44px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;line-height:1;padding-bottom:2px}
+.lightbox-arrow:active{background:rgba(255,255,255,.3)}
+.lightbox-prev{left:12px}
+.lightbox-next{right:12px}
+.lightbox-dots{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2}
+.lb-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);transition:background .15s}
+.lb-dot.on{background:#fff}
 .finput,.ftextarea,.fselect{width:100%;background:var(--bg2);border:1px solid var(--ln);border-radius:var(--radius);padding:11px 13px;font-size:.9375em;font-family:var(--f);color:var(--tx);outline:none;-webkit-appearance:none;appearance:none;min-height:44px}
 .card{background:var(--bg);border:1px solid var(--ln);border-radius:var(--radius);padding:13px 13px 11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
 .card.expanded{border-color:var(--ln3)}
@@ -359,9 +366,12 @@ html:not([data-fs]){font-size:17px}
 
 <button class="fab" id="fab" aria-label="新增">+</button>
 <div class="overlay" id="overlay"></div>
-<div class="lightbox" id="lightbox" style="display:none" onclick="closeLightbox()">
+<div class="lightbox" id="lightbox" style="display:none">
   <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <button class="lightbox-arrow lightbox-prev" id="lbPrev" onclick="lbStep(-1)">&#8249;</button>
   <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-arrow lightbox-next" id="lbNext" onclick="lbStep(1)">&#8250;</button>
+  <div class="lightbox-dots" id="lbDots"></div>
 </div>
 
 <!-- Add/Edit sheet -->
@@ -864,54 +874,55 @@ window.onStatusChange=()=>{
   if(s==='done'){updateDoneBoxLabel();buildScore(selScore);}
 };
 
-/* ── Image / Dither ── */
+/* ── Image / Chroma Blur C1 ── */
 let pendingImages=[];
-
-function floydSteinberg(imageData,w,h){
-  const d=imageData.data;
-  // convert to greyscale in-place
-  for(let i=0;i<d.length;i+=4){
-    const grey=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
-    d[i]=d[i+1]=d[i+2]=grey;
-  }
-  // dither
-  for(let y=0;y<h;y++){
-    for(let x=0;x<w;x++){
-      const idx=(y*w+x)*4;
-      const old=d[idx];
-      const nw=old<128?0:255;
-      const err=old-nw;
-      d[idx]=d[idx+1]=d[idx+2]=nw;
-      if(x+1<w){d[idx+4]+=err*7/16;d[idx+5]+=err*7/16;d[idx+6]+=err*7/16;}
-      if(y+1<h){
-        if(x>0){const j=((y+1)*w+(x-1))*4;d[j]+=err*3/16;d[j+1]+=err*3/16;d[j+2]+=err*3/16;}
-        const j2=((y+1)*w+x)*4;d[j2]+=err*5/16;d[j2+1]+=err*5/16;d[j2+2]+=err*5/16;
-        if(x+1<w){const j3=((y+1)*w+(x+1))*4;d[j3]+=err*1/16;d[j3+1]+=err*1/16;d[j3+2]+=err*1/16;}
-      }
-    }
-  }
-  return imageData;
-}
 
 function processImageFile(file){
   return new Promise(resolve=>{
     const img=new Image();
     const url=URL.createObjectURL(file);
-    img.onload=()=>{
-      const MAX=600;
-      let w=img.naturalWidth,h=img.naturalHeight;
-      if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-      else if(h>w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-      else if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-      const c=document.createElement('canvas');
-      c.width=w;c.height=h;
-      const ctx=c.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      const id=ctx.getImageData(0,0,w,h);
-      floydSteinberg(id,w,h);
-      ctx.putImageData(id,0,0);
+    img.onload=async()=>{
+      const MAX=480;
+      const sc=Math.min(1,MAX/Math.max(img.naturalWidth,img.naturalHeight));
+      const w=Math.round(img.naturalWidth*sc);
+      const h=Math.round(img.naturalHeight*sc);
+
+      // Draw original
+      const srcC=document.createElement('canvas');
+      srcC.width=w;srcC.height=h;
+      const sctx=srcC.getContext('2d');
+      sctx.drawImage(img,0,0,w,h);
+      const origPx=sctx.getImageData(0,0,w,h).data;
+
+      // Blurred version for chroma (r=3)
+      const blurC=document.createElement('canvas');
+      blurC.width=w;blurC.height=h;
+      const bctx=blurC.getContext('2d');
+      bctx.filter='blur(3px)';
+      bctx.drawImage(srcC,0,0);
+      const blurPx=bctx.getImageData(0,0,w,h).data;
+
+      // Compose: Y from original, Cb/Cr from blurred
+      const n=w*h*4;
+      const out=new Uint8ClampedArray(n);
+      for(let i=0;i<n;i+=4){
+        const Y=0.299*origPx[i]+0.587*origPx[i+1]+0.114*origPx[i+2];
+        const Cb=-0.168736*blurPx[i]-0.331264*blurPx[i+1]+0.5*blurPx[i+2]+128;
+        const Cr=0.5*blurPx[i]-0.418688*blurPx[i+1]-0.081312*blurPx[i+2]+128;
+        out[i]=Math.max(0,Math.min(255,Math.round(Y+1.402*(Cr-128))));
+        out[i+1]=Math.max(0,Math.min(255,Math.round(Y-0.344136*(Cb-128)-0.714136*(Cr-128))));
+        out[i+2]=Math.max(0,Math.min(255,Math.round(Y+1.772*(Cb-128))));
+        out[i+3]=255;
+      }
+
+      const dstC=document.createElement('canvas');
+      dstC.width=w;dstC.height=h;
+      dstC.getContext('2d').putImageData(new ImageData(out,w,h),0,0);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/webp',0.6));
+      const blob=await new Promise(r=>dstC.toBlob(r,'image/webp',0.72));
+      const reader=new FileReader();
+      reader.onload=e=>resolve(e.target.result);
+      reader.readAsDataURL(blob);
     };
     img.src=url;
   });
@@ -944,20 +955,64 @@ window.removeImg=i=>{
   renderImgList();
 };
 
-window.openLightbox=(imgs,idx)=>{
-  document.getElementById('lightboxImg').src=imgs[idx];
+let lbImgs=[],lbIdx=0;
+function lbRender(){
+  document.getElementById('lightboxImg').src=lbImgs[lbIdx];
+  document.getElementById('lbPrev').style.display=lbImgs.length>1?'flex':'none';
+  document.getElementById('lbNext').style.display=lbImgs.length>1?'flex':'none';
+  const dots=document.getElementById('lbDots');
+  dots.innerHTML=lbImgs.length>1
+    ?lbImgs.map((_,i)=>`<div class="lb-dot${i===lbIdx?' on':''}"></div>`).join('')
+    :'';
+}
+function lbOpen(imgs,idx){
+  lbImgs=imgs;lbIdx=idx;
   document.getElementById('lightbox').style.display='flex';
+  lbRender();
+}
+window.lbStep=d=>{
+  lbIdx=(lbIdx+d+lbImgs.length)%lbImgs.length;
+  lbRender();
 };
+window.openLightbox=(imgs,idx)=>lbOpen(imgs,idx);
 window.openLightboxById=(id,idx)=>{
   const it=db.items.find(x=>x.id===id);
-  if(!it||!it.images||!it.images[idx])return;
-  document.getElementById('lightboxImg').src=it.images[idx];
-  document.getElementById('lightbox').style.display='flex';
+  if(!it||!it.images?.length)return;
+  lbOpen(it.images,idx);
 };
 window.closeLightbox=()=>{
   document.getElementById('lightbox').style.display='none';
   document.getElementById('lightboxImg').src='';
+  lbImgs=[];lbIdx=0;
 };
+// swipe
+(()=>{
+  const lb=document.getElementById('lightbox');
+  let tx=0,sx=0,dragging=false;
+  lb.addEventListener('touchstart',e=>{
+    if(e.target.closest('button'))return;
+    sx=e.touches[0].clientX;dragging=true;
+  },{passive:true});
+  lb.addEventListener('touchmove',e=>{
+    if(!dragging)return;
+    tx=e.touches[0].clientX-sx;
+  },{passive:true});
+  lb.addEventListener('touchend',e=>{
+    if(!dragging)return;
+    dragging=false;
+    if(Math.abs(tx)>40&&lbImgs.length>1){
+      lbStep(tx<0?1:-1);
+    } else if(Math.abs(tx)<8){
+      // tap on bg closes
+      if(!e.target.closest('img')&&!e.target.closest('button'))closeLightbox();
+    }
+    tx=0;
+  });
+  // mouse click on bg
+  lb.addEventListener('click',e=>{
+    if(!e.target.closest('img')&&!e.target.closest('button')&&!e.target.closest('.lightbox-dots'))closeLightbox();
+  });
+})();
 document.getElementById('fab').addEventListener('click',()=>{editId=null;prepareForm(null);openSheet('addSheet');setTimeout(()=>document.getElementById('fTitle').focus(),280)});
 window.openEdit=id=>{editId=id;prepareForm(db.items.find(x=>x.id===id));openSheet('addSheet')};
 document.getElementById('cancelAdd').addEventListener('click',closeTop);
